@@ -1,5 +1,7 @@
 # 배포본 작성 기록
 
+2026-10-29 GitHub 업로드 시 README·설명 문서·사진·HDL 스냅샷을 추가하고 SHA256SUMS를 제출 파일 기준으로 갱신했다. 아래는 10월 27일 최초 배포본 작성 기록이다. 최초 원본 ZIP과 추출 해시 기록은 로컬 보관자료·작업관리 폴더에 보존했다.
+
 - 작성일: 2026-10-27
 - 원본 작업 공간: `/home/rilab/catkin_ws/src/2026scout`
 - 배포 폴더: `github_export/scout_dwa_xarm`
