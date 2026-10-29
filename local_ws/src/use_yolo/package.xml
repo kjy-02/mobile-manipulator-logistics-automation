@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>use_yolo</name>
+  <version>1.0.0</version>
+  <description>ROS 1 Python package for xArm5 Vision-based Pick and Drop using custom YOLOv8 box detector</description>
+
+  <maintainer email="user@todo.todo">User</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- ROS 1 Python Core & Control -->
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>actionlib</depend>
+  <depend>control_msgs</depend>
+  <depend>moveit_commander</depend>
+  <depend>tf</depend>
+
+  <!-- Vision & Bridge -->
+  <depend>cv_bridge</depend>
+  <depend>message_filters</depend>
+
+  <export>
+  </export>
+</package>

@@ -1,0 +1,132 @@
+[
+  {
+    "package": "scout_base",
+    "path": "/home/rilab/catkin_ws/src/scout_ros/scout_base",
+    "repository_root": "/home/rilab/catkin_ws/src/scout_ros",
+    "remote": "https://github.com/agilexrobotics/scout_ros.git",
+    "commit": "8304c602f1a828497ca41cd66dc6e0e2c21f1019",
+    "tracked_changes": "M scout_bringup/launch/scout_robot_base.launch"
+  },
+  {
+    "package": "scout_msgs",
+    "path": "/home/rilab/catkin_ws/src/scout_ros/scout_msgs",
+    "repository_root": "/home/rilab/catkin_ws/src/scout_ros",
+    "remote": "https://github.com/agilexrobotics/scout_ros.git",
+    "commit": "8304c602f1a828497ca41cd66dc6e0e2c21f1019",
+    "tracked_changes": "M scout_bringup/launch/scout_robot_base.launch"
+  },
+  {
+    "package": "ugv_sdk",
+    "path": "/home/rilab/catkin_ws/src/ugv_sdk",
+    "repository_root": "/home/rilab/catkin_ws/src/ugv_sdk",
+    "remote": "https://github.com/agilexrobotics/ugv_sdk.git",
+    "commit": "012a9aa02436ffe2ef66f211dd193be7b69902ba",
+    "tracked_changes": ""
+  },
+  {
+    "package": "velodyne_pointcloud",
+    "path": "/home/rilab/catkin_ws/src/velodyne/velodyne_pointcloud",
+    "repository_root": "/home/rilab/catkin_ws/src/velodyne",
+    "remote": "https://github.com/ros-drivers/velodyne.git",
+    "commit": "29abd0e1361cb7f5eda451d2b51c35eeca45e0d5",
+    "tracked_changes": ""
+  },
+  {
+    "package": "hdl_localization",
+    "path": "/home/rilab/catkin_ws/src/hdl_localization",
+    "repository_root": "/home/rilab/catkin_ws/src/hdl_localization",
+    "remote": "https://github.com/koide3/hdl_localization",
+    "commit": "de2dc7769aa2412876d05ae6161408d3295b6a3c",
+    "tracked_changes": "D data/map.pcd\n M launch/hdl_localization.launch"
+  },
+  {
+    "package": "hdl_global_localization",
+    "path": "/home/rilab/catkin_ws/src/hdl_global_localization",
+    "repository_root": "/home/rilab/catkin_ws/src/hdl_global_localization",
+    "remote": "https://github.com/koide3/hdl_global_localization",
+    "commit": "a6a6b69929ac371d9531d0dcdef3c1593fd49245",
+    "tracked_changes": ""
+  },
+  {
+    "package": "ndt_omp",
+    "path": "/home/rilab/catkin_ws/src/ndt_omp",
+    "repository_root": "/home/rilab/catkin_ws/src/ndt_omp",
+    "remote": "https://github.com/koide3/ndt_omp.git",
+    "commit": "5495fd9214945afcb4b35d5a1da385e405c52bf9",
+    "tracked_changes": ""
+  },
+  {
+    "package": "fast_gicp",
+    "path": "/home/rilab/catkin_ws/src/fast_gicp",
+    "repository_root": "/home/rilab/catkin_ws/src/fast_gicp",
+    "remote": "https://github.com/SMRT-AIST/fast_gicp.git",
+    "commit": "0e7ec1441c99f7be453db2ea216d5de029387417",
+    "tracked_changes": ""
+  },
+  {
+    "package": "xarm5_moveit_config",
+    "path": "/home/rilab/catkin_ws/src/xarm_ros/xarm5_moveit_config",
+    "repository_root": "/home/rilab/catkin_ws/src/xarm_ros",
+    "remote": "https://github.com/xArm-Developer/xarm_ros.git",
+    "commit": "990a268aa80c6f2a509293f7e0dc390e9c3f62a3",
+    "tracked_changes": "M xarm5_gripper_moveit_config/launch/realMove_exec.launch\n M xarm_sdk/cxx"
+  },
+  {
+    "package": "xarm_msgs",
+    "path": "/home/rilab/catkin_ws/src/xarm_ros/xarm_msgs",
+    "repository_root": "/home/rilab/catkin_ws/src/xarm_ros",
+    "remote": "https://github.com/xArm-Developer/xarm_ros.git",
+    "commit": "990a268aa80c6f2a509293f7e0dc390e9c3f62a3",
+    "tracked_changes": "M xarm5_gripper_moveit_config/launch/realMove_exec.launch\n M xarm_sdk/cxx",
+    "sdk_submodule": {
+      "path": "xarm_sdk/cxx",
+      "commit": "fa91a43794c12b84821058635ad65b955775892f",
+      "remote": "https://github.com/xArm-Developer/xArm-CPLUS-SDK.git"
+    }
+  },
+  {
+    "package": "realsense2_camera",
+    "path": "/opt/ros/noetic/share/realsense2_camera",
+    "repository_root": null
+  },
+  {
+    "package": "control_msgs",
+    "path": "/home/rilab/catkin_ws/src/control_msgs/control_msgs",
+    "repository_root": "/home/rilab/catkin_ws/src/control_msgs",
+    "remote": "https://github.com/ros-controls/control_msgs.git",
+    "commit": "36e2e30551e3f2bfd9e55fca553f1ef019f4e4b1",
+    "tracked_changes": ""
+  },
+  {
+    "package": "controller_manager",
+    "path": "/home/rilab/catkin_ws/src/ros_control/controller_manager",
+    "repository_root": "/home/rilab/catkin_ws/src/ros_control",
+    "remote": "https://github.com/ros-controls/ros_control.git",
+    "commit": "633c3746a9b109056658b862ff7d765cc85ec9da",
+    "tracked_changes": ""
+  },
+  {
+    "package": "joint_trajectory_controller",
+    "path": "/home/rilab/catkin_ws/src/ros_controllers/joint_trajectory_controller",
+    "repository_root": "/home/rilab/catkin_ws/src/ros_controllers",
+    "remote": "https://github.com/ros-controls/ros_controllers.git",
+    "commit": "c2348e85abf35cf33cf654a84d61db206abe9a73",
+    "tracked_changes": ""
+  },
+  {
+    "package": "realtime_tools",
+    "path": "/home/rilab/catkin_ws/src/realtime_tools",
+    "repository_root": "/home/rilab/catkin_ws/src/realtime_tools",
+    "remote": "https://github.com/ros-controls/realtime_tools.git",
+    "commit": "164f6d8702df7f510aee5bdd7e77ceb1a251ec0f",
+    "tracked_changes": ""
+  },
+  {
+    "package": "control_toolbox",
+    "path": "/home/rilab/catkin_ws/src/control_toolbox",
+    "repository_root": "/home/rilab/catkin_ws/src/control_toolbox",
+    "remote": "https://github.com/ros-controls/control_toolbox.git",
+    "commit": "de05a5c282f98f761fb162cc4206a94f7003c9a3",
+    "tracked_changes": ""
+  }
+]

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="parent_frame" default="base_link" />
+  <arg name="sensor_frame" default="velodyne" />
+  <arg name="x" doc="Required verified base_link-to-sensor x [m]" />
+  <arg name="y" doc="Required verified base_link-to-sensor y [m]" />
+  <arg name="z" doc="Required verified base_link-to-sensor z [m]" />
+  <arg name="yaw" doc="Required verified yaw [rad]" />
+  <arg name="pitch" doc="Required verified pitch [rad]" />
+  <arg name="roll" doc="Required verified roll [rad]" />
+
+  <node pkg="tf" type="static_transform_publisher" name="scout_lidar_extrinsics"
+        args="$(arg x) $(arg y) $(arg z) $(arg yaw) $(arg pitch) $(arg roll) $(arg parent_frame) $(arg sensor_frame) 100" />
+</launch>

@@ -1,0 +1,7 @@
+# Provisional footprint derived from the repository's Scout V2 URDF. Verify
+# the actual robot model, wheels, payload, and sensor mounts before driving.
+footprint:
+  - [0.4625, 0.3498]
+  - [0.4625, -0.3498]
+  - [-0.4625, -0.3498]
+  - [-0.4625, 0.3498]

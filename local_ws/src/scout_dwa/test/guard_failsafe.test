@@ -1,0 +1,10 @@
+<launch>
+  <node pkg="scout_dwa" type="cmd_vel_guard" name="cmd_vel_guard" output="screen">
+    <param name="enabled" value="true" />
+    <param name="obstacle_mode" value="map" />
+    <param name="require_input_health" value="false" />
+    <param name="require_sensor_health" value="false" />
+    <param name="require_localization_health" value="false" />
+  </node>
+  <test test-name="guard_failsafe" pkg="scout_dwa" type="test_guard_failsafe.py" time-limit="15" />
+</launch>

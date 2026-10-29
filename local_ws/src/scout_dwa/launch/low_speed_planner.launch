@@ -1,0 +1,22 @@
+<launch>
+  <arg name="goal_topic" default="/move_base_simple/goal" />
+  <include file="$(find dwa_planner)/launch/local_planner.launch">
+    <arg name="ns" value="scout_dwa" />
+    <arg name="dwa_param" value="$(find scout_dwa)/config/dwa_scout_low_speed_test.yaml" />
+    <arg name="robot_param" value="$(find scout_dwa)/config/dwa_scout_low_speed_test.yaml" />
+    <arg name="global_frame" value="map" />
+    <arg name="use_footprint" value="true" />
+    <arg name="use_path_cost" value="false" />
+    <arg name="use_scan_as_input" value="false" />
+    <arg name="cmd_vel" value="/scout_dwa/cmd_vel_raw" />
+    <arg name="local_map" value="/scout_dwa/local_map" />
+    <arg name="odom" value="/scout/odom" />
+    <arg name="local_goal" value="$(arg goal_topic)" />
+    <arg name="footprint" value="/scout_dwa/footprint" />
+    <arg name="scan" value="/scout_dwa/unused_scan" />
+    <arg name="path" value="/scout_dwa/unused_path" />
+    <arg name="target_velocity" value="/scout_dwa/target_velocity" />
+    <arg name="dist_to_goal_th" value="/scout_dwa/dist_to_goal_th" />
+  </include>
+  <param name="/scout_dwa/dwa_planner/ROBOT_FRAME" value="base_link" />
+</launch>

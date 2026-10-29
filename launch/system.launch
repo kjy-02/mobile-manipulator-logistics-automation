@@ -1,0 +1,26 @@
+<launch>
+  <arg name="robot_ip" default="192.168.1.210" />
+  <arg name="map_pcd_path" default="$(dirname)/../maps/outdoor.pcd" />
+
+  <include file="$(find scout_dwa)/launch/scout_base_for_dwa.launch">
+    <arg name="is_scout_mini" value="false" />
+    <arg name="is_scout_omni" value="false" />
+    <arg name="pub_tf" value="false" />
+  </include>
+  <include file="$(find scout_dwa)/launch/lidar.launch" />
+  <include file="$(find scout_dwa)/launch/hdl_localization_map.launch">
+    <arg name="map_pcd_path" value="$(arg map_pcd_path)" />
+  </include>
+  <include file="$(find scout_dwa)/launch/legacy_sensor_tf.launch" />
+  <include file="$(find scout_dwa)/launch/goal_navigation.launch">
+    <arg name="accepted_hardware_profile" value="true" />
+    <arg name="accepted_obstacle_input" value="true" />
+  </include>
+  <include file="$(find scout_dwa)/launch/visualization.launch" />
+  <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+    <arg name="filters" value="" />
+  </include>
+  <include file="$(find xarm5_moveit_config)/launch/realMove_exec.launch">
+    <arg name="robot_ip" value="$(arg robot_ip)" />
+  </include>
+</launch>

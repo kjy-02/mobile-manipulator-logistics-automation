@@ -1,0 +1,6 @@
+<launch>
+  <!-- Existing user's mounting setting, not a verified physical calibration.
+       Replaces tf_code/velodyne_to_baselink.py; never run both together. -->
+  <node pkg="tf2_ros" type="static_transform_publisher" name="scout_legacy_sensor_tf"
+        args="-0.35 0 0 0 0 0 velodyne base_link" />
+</launch>

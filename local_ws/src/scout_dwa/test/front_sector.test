@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="scout_dwa" type="cloud_obstacle_adapter" name="cloud_obstacle_adapter">
+    <param name="input_topic" value="/front_sector_points" />
+    <param name="planner_front_only" value="true" />
+    <param name="planner_half_angle_deg" value="60.0" />
+    <param name="coverage_confirmed" value="true" />
+  </node>
+  <test test-name="front_sector" pkg="scout_dwa" type="test_front_sector.py" time-limit="25" />
+</launch>

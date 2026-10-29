@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="scout_dwa" type="cmd_vel_guard" name="cmd_vel_guard">
+    <param name="enabled" value="true"/>
+  </node>
+  <node pkg="scout_dwa" type="synthetic_watchdog.py" name="synthetic_watchdog"/>
+  <test test-name="guard_sigkill" pkg="scout_dwa" type="test_guard_death.py" time-limit="15"/>
+</launch>

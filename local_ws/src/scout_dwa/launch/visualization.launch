@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="scout_dwa" type="trajectory_display.py" name="trajectory_display" />
+  <node pkg="rviz" type="rviz" name="scout_dwa_rviz"
+        args="-d $(find scout_dwa)/rviz/scout_dwa.rviz" />
+</launch>

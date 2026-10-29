@@ -1,0 +1,22 @@
+# Generated build/runtime files
+**/build/
+**/devel/
+**/install/
+**/logs/
+**/__pycache__/
+**/.catkin_workspace
+*.py[cod]
+*.bag
+*.bag.active
+*.zip
+*.tar.gz
+.ros/
+.env
+*.bak
+# Local drafting/handoff notes; kept outside the published file list.
+GITHUB_GUIDE.md
+**/CODEX_HANDOFF.md
+**/SCOUT_HDL_DWA_HANDOFF.md
+**/AMSL_DWA_NEXT_IMPLEMENTATION_PLAN.md
+**/AMSL_DWA_MIGRATION_PLAN.md
+# Maps and ONNX model are intentionally included.

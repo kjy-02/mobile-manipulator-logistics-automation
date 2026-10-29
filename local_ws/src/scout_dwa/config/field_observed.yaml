@@ -1,0 +1,56 @@
+# Observed directly on the connected computer, 2026-09-30.
+# Device identity and transport observations are not geometry calibration.
+lidar:
+  model: VLP-16-A
+  ip: 192.168.1.201
+  udp_port: 2368
+  topic: /velodyne_points
+  frame: velodyne
+  observed_rate_hz: 10.0
+  planner_front_half_angle_deg: null
+  planner_map_topic: /scout_dwa/local_map
+  planner_angular_filter_source: user requested original full-angle DWA input
+  guard_obstacle_topic: /scout_dwa/front_obstacles
+  guard_front_half_angle_deg: 60.0
+  computer_interface: enx00e04c892568
+  computer_address: 192.168.1.70/24
+scout:
+  can_interface: can0
+  observed_can_state: UP
+  bitrate: 500000
+  observed_protocol: AGX_V2
+  received_status_ids: [0x211, 0x221, 0x241]
+  model: null
+  model_candidate: Scout 2.0
+  model_candidate_source: user tentative identification; not confirmed
+  wheel_odom_topic: /scout/odom
+  wheel_odom_observed_rate_hz: 50.0
+  driver_running: true
+  driver_is_scout_mini: false
+  driver_is_scout_omni: false
+  driver_pub_tf: false
+  observed_fault_code: 0
+  observed_control_mode: 1
+  reason: CAN status reception confirmed; protocol V2 does not establish physical model; V2/Mini local launch settings conflict
+localization:
+  running: true
+  state: initial_pose_received_matching_converged
+  observed_rate_hz: 9.8
+  observed_inlier_fraction: 0.9956
+  observed_matching_error: 0.0105
+  globalmap_publisher_confirmed: true
+  map_name: 하드실
+  map_pcd: /home/rilab/catkin_ws/src/hdl_localization/data/map/hard.pcd
+  requested_map_name: 멀티3층
+  requested_map_pcd: /home/rilab/catkin_ws/map/my_map.pcd
+  previous_map_name: 야외 학생회관
+  previous_map_pcd: /home/rilab/catkin_ws/src/hdl_graph_slam/map.pcd
+geometry:
+  legacy_tf_script_running: false
+  legacy_static_tf_running: true
+  legacy_velodyne_to_base_translation: [-0.35, 0.0, 0.0]
+  legacy_tf_calibration_confirmed: false
+  base_to_lidar: {x: 0.35, y: 0.0, z: 0.0, roll: 0.0, pitch: 0.0, yaw: 0.0}
+  base_to_lidar_source: user accepted existing setting
+  footprint: [[0.4625, 0.3498], [0.4625, -0.3498], [-0.4625, -0.3498], [-0.4625, 0.3498]]
+  footprint_source: user confirmation

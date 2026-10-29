@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find scout_dwa)/launch/synthetic_pipeline.launch">
+    <arg name="publish_synthetic_inputs" value="false"/>
+  </include>
+  <param name="/cmd_vel_guard/require_rotation_coverage" value="true"/>
+  <param name="/cmd_vel_guard/rotation_coverage_confirmed" value="true"/>
+  <test test-name="planner_lifecycle" pkg="scout_dwa" type="test_planner_lifecycle.py" time-limit="30"/>
+</launch>

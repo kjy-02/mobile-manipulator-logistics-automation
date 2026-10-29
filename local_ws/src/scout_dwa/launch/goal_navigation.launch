@@ -1,0 +1,30 @@
+<launch>
+  <arg name="accepted_hardware_profile" default="false" />
+  <arg name="accepted_obstacle_input" default="false" />
+  <node pkg="scout_dwa" type="cloud_obstacle_adapter" name="cloud_obstacle_adapter" output="screen">
+    <rosparam command="load" file="$(find scout_dwa)/config/cloud_adapter_reference.yaml" />
+    <param name="input_topic" value="/velodyne_points" />
+    <param name="target_frame" value="base_link" />
+    <param name="publish_map" value="true" />
+    <param name="publish_scan" value="false" />
+    <param name="coverage_confirmed" value="$(arg accepted_obstacle_input)" />
+  </node>
+  <node pkg="scout_dwa" type="localization_monitor.py" name="localization_monitor" output="screen">
+    
+    <param name="status_topic" value="/localization/status" />
+    <param name="max_matching_error" value="0.05" />
+    <param name="min_inlier_fraction" value="0.90" />
+    <param name="required_consecutive" value="3" />
+    <param name="require_quality_check" value="false" />
+    <param name="require_pose_jump_check" value="false" />
+    <param name="global_frame" value="map" />
+    <param name="odom_frame" value="base_link" />
+    <param name="max_correction_translation" value="0.10" />
+    <param name="max_correction_rotation" value="0.10" />
+  </node>
+  <node pkg="scout_dwa" type="static_footprint_publisher" name="static_footprint_publisher">
+    <rosparam command="load" file="$(find scout_dwa)/config/footprint_scout_v2_reference.yaml" />
+    <param name="frame_id" value="base_link" />
+  </node>
+  <node pkg="scout_dwa" type="command_watchdog.py" name="scout_command_watchdog" output="screen" required="true" />
+</launch>

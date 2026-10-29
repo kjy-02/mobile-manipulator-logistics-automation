@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>scout_dwa</name>
+  <version>0.1.0</version>
+  <description>Scout integration nodes and launch files for the upstream AMSL DWA planner.</description>
+
+  <maintainer email="rilab@todo.todo">rilab</maintainer>
+  <license>BSD-3-Clause</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>std_srvs</depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <depend>nav_msgs</depend>
+  <depend>pcl_conversions</depend>
+  <depend>pcl_ros</depend>
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf</depend>
+  <exec_depend>tf2_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+
+  <exec_depend>dwa_planner</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>rosgraph</exec_depend>
+  <exec_depend>rosnode</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>hdl_localization</exec_depend>
+  <exec_depend>scout_msgs</exec_depend>
+
+  <test_depend>rostest</test_depend>
+  <test_depend>rospy</test_depend>
+  <depend>visualization_msgs</depend>
+
+  <export/>
+</package>

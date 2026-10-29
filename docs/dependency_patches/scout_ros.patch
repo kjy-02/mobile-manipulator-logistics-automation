@@ -1,0 +1,11 @@
+diff --git a/scout_bringup/launch/scout_robot_base.launch b/scout_bringup/launch/scout_robot_base.launch
+index d24136c..45a493d 100644
+--- a/scout_bringup/launch/scout_robot_base.launch
++++ b/scout_bringup/launch/scout_robot_base.launch
+@@ -18,4 +18,6 @@
+         <arg name="model_xacro" default="$(arg model_xacro)" />
+     </include-->
+ 
++
++
+ </launch>

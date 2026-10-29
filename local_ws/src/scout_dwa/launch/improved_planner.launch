@@ -1,0 +1,29 @@
+<launch>
+  <arg name="goal_topic" default="/move_base_simple/goal" />
+  <arg name="ns" default="scout_dwa" />
+  <arg name="cmd_vel" default="/scout_dwa/cmd_vel_raw" />
+  <arg name="local_map" default="/scout_dwa/local_map" />
+  <arg name="odom" default="/scout/odom" />
+  <arg name="footprint" default="/scout_dwa/footprint" />
+  <arg name="global_frame" default="map" />
+  <node pkg="scout_dwa" type="scout_improved_dwa" name="dwa_planner" ns="$(arg ns)" output="screen">
+    <rosparam command="load" file="$(find scout_dwa)/config/dwa_scout_low_speed_test.yaml" />
+    <param name="PREFERRED_CLEARANCE" value="0.15" />
+    <param name="STEERING_COST_GAIN" value="0.20" />
+    <param name="STEERING_CHANGE_GAIN" value="0.04" />
+    <param name="GLOBAL_FRAME" value="$(arg global_frame)" />
+    <param name="USE_FOOTPRINT" value="true" />
+    <param name="USE_PATH_COST" value="false" />
+    <param name="USE_SCAN_AS_INPUT" value="false" />
+    <param name="HZ" value="20" />
+    <remap from="/cmd_vel" to="$(arg cmd_vel)" />
+    <remap from="/local_map" to="$(arg local_map)" />
+    <remap from="/odom" to="$(arg odom)" />
+    <remap from="/footprint" to="$(arg footprint)" />
+    <remap from="/move_base_simple/goal" to="$(arg goal_topic)" />
+    <remap from="/scan" to="/scout_dwa/unused_scan" />
+    <remap from="/path" to="/scout_dwa/unused_path" />
+    <remap from="/target_velocity" to="/scout_dwa/target_velocity" />
+    <remap from="/dist_to_goal_th" to="/scout_dwa/dist_to_goal_th" />
+  </node>
+</launch>

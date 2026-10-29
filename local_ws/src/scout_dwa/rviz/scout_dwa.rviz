@@ -1,0 +1,85 @@
+Panels:
+- Class: rviz/Displays
+  Name: Displays
+- Class: rviz/Views
+  Name: Views
+Visualization Manager:
+  Class: ''
+  Enabled: true
+  Name: root
+  Value: true
+  Global Options:
+    Fixed Frame: map
+    Background Color: 35; 35; 35
+    Frame Rate: 30
+  Displays:
+  - Class: rviz/Grid
+    Name: Grid
+    Enabled: true
+  - Class: rviz/PointCloud2
+    Name: Multi 3F Global Map
+    Topic: /globalmap
+    Enabled: true
+    Style: Flat Squares
+    Size (m): 0.03
+    Alpha: 0.25
+    Color Transformer: FlatColor
+    Color: 180; 180; 180
+  - Class: rviz/PointCloud2
+    Name: Aligned LiDAR
+    Topic: /aligned_points
+    Enabled: false
+    Style: Points
+    Size (Pixels): 2
+    Color Transformer: FlatColor
+    Color: 80; 180; 255
+  - Class: rviz/Map
+    Name: DWA Local Map
+    Topic: /scout_dwa/local_map
+    Enabled: false
+    Alpha: 0.25
+    Draw Behind: true
+  - Class: rviz/LaserScan
+    Name: DWA Scan
+    Topic: /scout_dwa/scan
+    Enabled: false
+  - Class: rviz/Polygon
+    Name: Footprint
+    Topic: /scout_dwa/footprint
+    Enabled: true
+  - Class: rviz/MarkerArray
+    Name: Candidate Trajectories
+    Marker Topic: /scout_dwa/display/candidate_trajectories
+    Enabled: true
+  - Class: rviz/Marker
+    Name: Selected Trajectory
+    Marker Topic: /scout_dwa/display/selected_trajectory
+    Enabled: true
+  - Class: rviz/MarkerArray
+    Name: Predicted Footprints
+    Marker Topic: /scout_dwa/dwa_planner/predict_footprints
+    Enabled: false
+  - Class: rviz/Pose
+    Name: RViz Goal
+    Topic: /move_base_simple/goal
+    Enabled: true
+  Tools:
+  - Class: rviz/Interact
+  - Class: rviz/MoveCamera
+  - Class: rviz/Select
+  - Class: rviz/SetInitialPose
+    Topic: /initialpose
+    X std deviation: 0.5
+    Y std deviation: 0.5
+    Theta std deviation: 0.261799
+  - Class: rviz/SetGoal
+    Topic: /move_base_simple/goal
+  Views:
+    Current:
+      Class: rviz/TopDownOrtho
+      Name: Current View
+      Target Frame: base_link
+      Scale: 120
+      Angle: 0
+      X: 0
+      Y: 0

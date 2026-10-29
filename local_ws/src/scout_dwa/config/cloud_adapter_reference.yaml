@@ -1,0 +1,24 @@
+# The sensor mounting geometry and vertical filter must be checked on the real
+# robot before motion output is enabled.
+target_frame: base_link
+planner_front_only: true
+planner_half_angle_deg: 60.0
+map_topic: /scout_dwa/front_obstacles
+safety_map_topic: /scout_dwa/local_map
+coverage_confirmed: false
+allow_empty_cloud: false
+map_size_x: 6.0
+map_size_y: 6.0
+map_resolution: 0.05
+min_z: -0.30
+max_z: 0.80
+min_range: 0.10
+max_range: 5.00
+self_filter_enabled: false
+self_min_x: -0.50
+self_max_x: 0.50
+self_min_y: -0.40
+self_max_y: 0.40
+scan_angle_min: -3.141592653589793
+scan_angle_max: 3.141592653589793
+scan_angle_increment: 0.017453292519943295

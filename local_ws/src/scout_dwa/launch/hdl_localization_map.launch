@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="nodelet_manager" default="dwa_localization_nodelet_manager" />
+  <arg name="points_topic" default="/velodyne_points" />
+  <arg name="map_pcd_path" default="$(find scout_dwa)/../../../maps/outdoor.pcd" />
+  <arg name="odom_child_frame_id" default="velodyne" />
+  <arg name="use_global_localization" default="true" />
+  <arg name="use_imu" default="false" />
+  <arg name="imu_topic" default="/imu/data" />
+  <arg name="enable_robot_odometry_prediction" default="false" />
+  <arg name="robot_odom_frame_id" default="odom" />
+
+  <include file="$(find hdl_global_localization)/launch/hdl_global_localization.launch"
+           if="$(arg use_global_localization)" />
+
+  <node pkg="nodelet" type="nodelet" name="$(arg nodelet_manager)" args="manager" output="screen" />
+
+  <node pkg="nodelet" type="nodelet" name="globalmap_server_nodelet"
+        args="load hdl_localization/GlobalmapServerNodelet $(arg nodelet_manager)"
+        output="screen">
+    <param name="globalmap_pcd" value="$(arg map_pcd_path)" />
+    <param name="convert_utm_to_local" value="true" />
+    <param name="downsample_resolution" value="0.1" />
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="hdl_localization_nodelet"
+        args="load hdl_localization/HdlLocalizationNodelet $(arg nodelet_manager)"
+        output="screen">
+    <!-- Keep localization pose separate from Scout wheel odometry. DWA uses
+         /scout/odom because the upstream dynamic window needs measured twist. -->
+    <remap from="/odom" to="/localization/odom" />
+    <remap from="/status" to="/localization/status" />
+    <remap from="/velodyne_points" to="$(arg points_topic)" />
+    <remap from="/gpsimu_driver/imu_data" to="$(arg imu_topic)" />
+
+    <param name="odom_child_frame_id" value="$(arg odom_child_frame_id)" />
+    <param name="use_imu" value="$(arg use_imu)" />
+    <param name="invert_acc" value="false" />
+    <param name="invert_gyro" value="false" />
+    <param name="cool_time_duration" value="2.0" />
+    <param name="enable_robot_odometry_prediction" value="$(arg enable_robot_odometry_prediction)" />
+    <param name="robot_odom_frame_id" value="$(arg robot_odom_frame_id)" />
+
+    <param name="reg_method" value="NDT_OMP" />
+    <param name="ndt_neighbor_search_method" value="DIRECT7" />
+    <param name="ndt_neighbor_search_radius" value="2.0" />
+    <param name="ndt_resolution" value="1.0" />
+    <param name="downsample_resolution" value="0.1" />
+
+    <param name="specify_init_pose" value="false" />
+    <param name="use_global_localization" value="$(arg use_global_localization)" />
+  </node>
+</launch>

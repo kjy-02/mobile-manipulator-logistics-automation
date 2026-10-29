@@ -1,0 +1,22 @@
+<launch>
+  <!-- 1. RealSense 카메라 실행 여부 (기본값: false - 이미 켜져있는 경우를 대비) -->
+  <arg name="launch_camera" default="false" />
+  <arg name="model_path" default="$(find use_yolo)/box_yolov8n.onnx" />
+
+  <!-- RealSense 카메라 실행 (필요 시) -->
+  <group if="$(arg launch_camera)">
+    <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+      <arg name="align_depth" value="true" />
+    </include>
+  </group>
+
+  <!-- 2. YOLOv8 Python 뎁스 연동 검출 노드 -->
+  <node pkg="use_yolo" type="yolo_detector.py" name="yolo_detector" output="screen">
+    <param name="model_path" value="$(arg model_path)" />
+    <param name="confidence" value="0.50" />
+  </node>
+
+  <!-- 3. xArm5 6단계 비전 연동 Pick & Drop 제어 노드 (Python) -->
+  <node pkg="use_yolo" type="xarm_vision_pick_drop.py" name="xarm_vision_pick_drop" output="screen" />
+</launch>
+

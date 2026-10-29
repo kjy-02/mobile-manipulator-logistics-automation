@@ -1,0 +1,14 @@
+<launch>
+  <!-- No vehicle command publisher is started by this launch. -->
+  <arg name="accepted_trial_hardware" default="false" />
+  <arg name="accepted_trial_detection" default="false" />
+  <include file="$(find scout_dwa)/launch/first_motion_checks.launch">
+    <arg name="accepted_trial_hardware" value="$(arg accepted_trial_hardware)" />
+    <arg name="accepted_trial_detection" value="$(arg accepted_trial_detection)" />
+  </include>
+  <node pkg="scout_dwa" type="static_footprint_publisher" name="static_footprint_publisher">
+    <rosparam command="load" file="$(find scout_dwa)/config/footprint_scout_v2_reference.yaml" />
+    <param name="frame_id" value="base_link" />
+  </node>
+  <include file="$(find scout_dwa)/launch/low_speed_planner.launch" />
+</launch>

@@ -1,0 +1,20 @@
+ROBOT_FRAME: "base_link"
+
+# The previous node used 0.45 m as its obstacle stop distance. Until an exact
+# polygon is measured, use a conservative circular model totaling 0.50 m.
+ROBOT_RADIUS: 0.45       # [m]
+FOOTPRINT_PADDING: 0.05  # [m]
+
+# Previous direct-goal velocity candidates covered 0.30 .. 0.50 m/s and
+# approximately -0.70 .. +0.90 rad/s. Use the smaller symmetric yaw limit.
+MAX_VELOCITY: 0.50          # [m/s]
+MIN_VELOCITY: 0.00          # [m/s]
+MAX_YAWRATE: 0.70           # [rad/s]
+MIN_YAWRATE: 0.05           # [rad/s]
+MAX_IN_PLACE_YAWRATE: 0.50  # [rad/s]
+MIN_IN_PLACE_YAWRATE: 0.15  # [rad/s]
+
+# Conservative starting values; confirm against the actual Scout and payload.
+MAX_ACCELERATION: 0.30 # [m/s^2]
+MAX_DECELERATION: 0.80 # [m/s^2]
+MAX_D_YAWRATE: 1.00    # [rad/s^2]

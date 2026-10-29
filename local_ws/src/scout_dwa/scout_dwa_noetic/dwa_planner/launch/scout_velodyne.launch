@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- Confirmed interfaces from the previously used Scout navigation node. -->
+    <arg name="points" default="/velodyne_points"/>
+    <arg name="goal" default="/move_base_simple/goal"/>
+    <arg name="odom" default="/scout_odom"/>
+    <arg name="cmd_vel" default="/cmd_vel"/>
+
+    <include file="$(find dwa_planner)/launch/local_planner.launch">
+        <arg name="ns" value="scout_dwa"/>
+        <arg name="dwa_param" value="$(find dwa_planner)/config/scout_dwa_param.yaml"/>
+        <arg name="robot_param" value="$(find dwa_planner)/config/scout_robot_param.yaml"/>
+        <arg name="hz" value="20"/>
+        <arg name="global_frame" value="map"/>
+        <arg name="subscribe_count_th" value="3"/>
+        <arg name="use_footprint" value="false"/>
+        <arg name="use_path_cost" value="false"/>
+        <arg name="use_pointcloud_as_input" value="true"/>
+        <arg name="use_scan_as_input" value="false"/>
+        <arg name="points" value="$(arg points)"/>
+        <arg name="local_goal" value="$(arg goal)"/>
+        <arg name="odom" value="$(arg odom)"/>
+        <arg name="cmd_vel" value="$(arg cmd_vel)"/>
+    </include>
+</launch>
