@@ -1,6 +1,8 @@
-# Scout DWA + xArm5 Vision Pick & Place
+# 모바일 매니퓰레이터 물류 자동화 시스템
 
-**3D LiDAR 지도 기반 자율주행과 비전 물품 분류를 통합한 졸업작품**입니다. HDL Graph SLAM으로 작성한 지도에서 로봇 위치를 추정하고, DWA로 작업 위치까지 이동한 뒤 YOLO 검출 결과를 이용해 xArm5로 물품을 파지·분류합니다.
+**Mobile Manipulator Logistics Automation System**
+
+SCOUT 2.0과 xArm5를 결합해 **픽업존 접근 주행 → 정지 → 상자 인식 → 파지·분류 적재**를 연결한 졸업작품입니다. 물품에 별도의 시각 마커를 부착하지 않고 RGB-D 영상으로 상자의 위치와 종류를 파악하는 물류 자동화 시스템을 목표로 구성했습니다.
 
 | 항목 | 내용 |
 |---|---|
@@ -9,13 +11,13 @@
 | 김재윤 담당 | 지도 작성, localization 적용·설정, DWA 수정, 전체 통합 테스트 |
 | 팀원 역할 | xArm 관련 작업 1인, 프로젝트 보조 1인 |
 
-SLAM·위치 추정·DWA의 기존 패키지를 활용하고 프로젝트 장비에 맞게 구성·수정·통합했습니다. 세부 수정 내용과 문제 해결 경험은 확인된 내용을 기준으로 추가합니다.
+SLAM·위치 추정·DWA의 기존 패키지를 활용하고 프로젝트 장비에 맞게 구성·수정·통합했습니다. 논문 「모바일 매니퓰레이터 물류 자동화 시스템」은 작성 중이며, README는 현재 코드와 실물 시연에서 확인한 동작을 중심으로 정리했습니다.
 
 <img src="media/robot-overview.png" alt="Scout와 xArm5를 결합한 실험 장비" width="640">
 
 ## 시연과 결과
 
-[야외 통합 시연 영상](https://github.com/kjy-02/scout-dwa-xarm-pick-place/releases/tag/demo-v1) · [통합 문제와 해결](docs/INTEGRATION_DEBUGGING.md)
+[야외 통합 시연 영상](https://github.com/kjy-02/mobile-manipulator-logistics-automation/releases/tag/demo-v1) · [시스템 기술 설명](docs/SYSTEM_DESIGN.md) · [통합 문제와 해결](docs/INTEGRATION_DEBUGGING.md)
 
 야외에서 목표 위치까지 주행한 뒤 차량을 정지하고, 작업대의 물체를 검출해 파지·분류하는 통합 시연을 진행했습니다. L515 카메라의 미사용 pointcloud 기능을 비활성화해 통합 실행 중 카메라 미송출 문제를 해결했습니다. 충전기 분리 시 나타난 간헐적인 프레임 저하는 절전 모드 전환에 따른 현상으로 추정합니다.
 
@@ -59,16 +61,20 @@ flowchart LR
 ## 환경
 
 - ROS 1 Noetic, Python 3, catkin
-- Scout, SocketCAN `can0` / 500000 bps
-- Velodyne LiDAR, HDL localization
+- SCOUT 2.0, SocketCAN `can0` / 500000 bps
+- Velodyne VLP-16, HDL Graph SLAM, HDL localization
 - xArm5, MoveIt, xArm gripper
-- RealSense RGB·깊이 영상, OpenCV DNN, NumPy, cv_bridge
+- Intel RealSense L515 RGB·깊이 영상, OpenCV DNN, NumPy, cv_bridge
 
 세 개의 프로젝트 패키지만으로 외부 드라이버까지 설치되는 구조는 아닙니다. **Scout·LiDAR·위치 추정·xArm·RealSense 의존성이 설치되고 빌드된 기반 workspace가 필요합니다.** 상세 목록과 새 PC 구성 시 참고 사항은 [DEPENDENCIES.md](docs/DEPENDENCIES.md)를 확인하세요.
 
 ## 기존 PC에서 실행
 
 아래는 저장소를 `~/scout_dwa_xarm`으로 옮겼을 때의 예입니다. 다른 위치에서는 해당 경로를 바꾸세요.
+
+```bash
+git clone https://github.com/kjy-02/mobile-manipulator-logistics-automation.git ~/scout_dwa_xarm
+```
 
 ### 1. 준비 환경 — 첫 번째 터미널
 
