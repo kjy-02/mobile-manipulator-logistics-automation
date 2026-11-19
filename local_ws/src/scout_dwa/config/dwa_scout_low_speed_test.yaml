@@ -14,7 +14,10 @@ SPEED_COST_GAIN: 0.4
 PATH_COST_GAIN: 0.4
 ANGLE_RESOLUTION: 0.087
 OBS_RANGE: 2.5
-GOAL_THRESHOLD: 0.5
+GOAL_THRESHOLD: 0.3
+# Ignore obstacle points inside this radius around the goal (not around the vehicle).
+# Set to 0.0 to restore all obstacle checks.
+GOAL_OBSTACLE_IGNORE_RADIUS: 0.75
 TURN_DIRECTION_THRESHOLD: 0.1
 ANGLE_TO_GOAL_TH: 3.141592653589793
 ROBOT_FRAME: base_link

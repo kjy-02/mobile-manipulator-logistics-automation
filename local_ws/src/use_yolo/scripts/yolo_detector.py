@@ -25,6 +25,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image, CameraInfo
 from std_msgs.msg import Bool, Int32, String
 import tf
+import tf.transformations as tft
 
 import os
 import json
@@ -128,7 +129,7 @@ class YoloDetectorNode:
         self.camera_frame = rospy.get_param("~camera_frame", "camera_link")
         self.target_frame = rospy.get_param("~target_frame", "ap_target")
         self.min_target_depth = rospy.get_param("~min_depth", 0.25)  # 작업대 최소 유효 거리 (m)
-        self.max_target_depth = rospy.get_param("~max_depth", 0.58)  # 작업대 최대 유효 거리 (바닥/배경 배제)
+        self.max_target_depth = rospy.get_param("~max_depth", 0.60)  # 작업대 최대 유효 거리 (바닥/배경 배제)
         self.show_window = rospy.get_param("~show_window", True)
         self.window_name = "L515 - Multi-Class Box Detection"
 
@@ -286,6 +287,93 @@ class YoloDetectorNode:
 
         return 0.518
 
+    def estimate_box_yaw(self, bgr_frame, rgb_box, cls_id):
+        """
+        모델 재학습 없이 YOLO 2D Bounding Box 내부 ROI에서
+        HSV 색상 마스킹 및 Canny 윤곽선 + cv2.minAreaRect를 이용해
+        정육면체 상자의 평면 회전 각도(Yaw, 단위: rad, 범위: -pi/4 ~ +pi/4)와
+        회전된 4개 꼭짓점(box_pts)을 추정합니다.
+        """
+        img_h, img_w = bgr_frame.shape[:2]
+        x, y, w, h = rgb_box
+
+        # 박스 테두리 경계선까지 포함하도록 8% 여유 마진 부여
+        pad_x = max(4, int(w * 0.08))
+        pad_y = max(4, int(h * 0.08))
+        x1 = max(0, x - pad_x)
+        y1 = max(0, y - pad_y)
+        x2 = min(img_w, x + w + pad_x)
+        y2 = min(img_h, y + h + pad_y)
+
+        roi = bgr_frame[y1:y2, x1:x2]
+        if roi.size == 0 or roi.shape[0] < 10 or roi.shape[1] < 10:
+            default_pts = np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], dtype=np.int32)
+            return 0.0, default_pts
+
+        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        if cls_id == 0:  # 빨간색 박스 (red_box)
+            m1 = cv2.inRange(hsv, np.array([0, 60, 50]), np.array([15, 255, 255]))
+            m2 = cv2.inRange(hsv, np.array([160, 60, 50]), np.array([180, 255, 255]))
+            mask = cv2.bitwise_or(m1, m2)
+        elif cls_id == 1:  # 노란색 박스 (yellow_box)
+            mask = cv2.inRange(hsv, np.array([15, 60, 60]), np.array([42, 255, 255]))
+        else:  # 파란색 박스 (blue_box)
+            mask = cv2.inRange(hsv, np.array([90, 60, 45]), np.array([140, 255, 255]))
+
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
+
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        valid_cnt = None
+        roi_area = float(roi.shape[0] * roi.shape[1])
+
+        if contours:
+            largest = max(contours, key=cv2.contourArea)
+            if cv2.contourArea(largest) > roi_area * 0.12:
+                valid_cnt = largest
+
+        # Fallback: 조명 변화 등으로 색상 마스크가 작을 경우 그레이스케일 엣지/이진화 활용
+        if valid_cnt is None:
+            gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+            blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+            edges = cv2.Canny(blurred, 40, 120)
+            edges = cv2.dilate(edges, kernel, iterations=1)
+            cnts_edge, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if cnts_edge:
+                largest_edge = max(cnts_edge, key=cv2.contourArea)
+                if cv2.contourArea(largest_edge) > roi_area * 0.10:
+                    valid_cnt = largest_edge
+
+        if valid_cnt is None:
+            default_pts = np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], dtype=np.int32)
+            return 0.0, default_pts
+
+        # 컨벡스 헐(Convex Hull)로 오목한 그림자 노이즈 제거 후 최소외접사각형 산출
+        hull = cv2.convexHull(valid_cnt)
+        rect = cv2.minAreaRect(hull)  # ((cx, cy), (rw, rh), angle_deg)
+        box_pts = cv2.boxPoints(rect)
+        box_pts[:, 0] += x1
+        box_pts[:, 1] += y1
+        box_pts_int = np.int32(np.round(box_pts))
+
+        # 가장 긴 변(또는 첫 두 꼭짓점 벡터)을 기준으로 각도 산출 후
+        # 정육면체(정사각형) 90도 대칭성을 이용해 [-45°, +45°] 범위로 정규화
+        (rcx, rcy), (rw, rh), _ = rect
+        if rw < 5 or rh < 5:
+            return 0.0, box_pts_int
+
+        # box_pts의 인접 변 벡터를 이용해 이미지 가로축(u) 대비 회전각 추출
+        edge1 = box_pts[1] - box_pts[0]
+        edge2 = box_pts[2] - box_pts[1]
+        main_edge = edge1 if np.linalg.norm(edge1) >= np.linalg.norm(edge2) else edge2
+        raw_deg = np.degrees(np.arctan2(main_edge[1], main_edge[0]))
+
+        # [-45°, +45°] 범위로 90도 주기 정규화 (정사각형 상자이므로 90도마다 동일)
+        norm_deg = ((raw_deg + 45.0) % 90.0) - 45.0
+        yaw_rad = float(np.radians(norm_deg))
+        return yaw_rad, box_pts_int
+
     def run(self):
         rate = rospy.Rate(30)
         count = 0
@@ -312,6 +400,8 @@ class YoloDetectorNode:
                     u_center = int(x + width / 2)
                     v_center = int(y + height / 2)
                     depth_z = self.get_box_depth(depth_map, (x, y, width, height), frame.shape)
+                    yaw_rad, rot_box_pts = self.estimate_box_yaw(frame, (x, y, width, height), cls_id)
+                    yaw_deg = float(np.degrees(yaw_rad))
 
                     # 뎁스 캐시 유지 (순간 결측 방지 및 작업대 범위 내 뎁스만 캐싱)
                     now = rospy.Time.now()
@@ -325,15 +415,22 @@ class YoloDetectorNode:
                     cls_name = CLASS_NAMES.get(cls_id, f"box_{cls_id}")
                     color = CLASS_COLORS.get(cls_id, (0, 200, 80))
 
-                    # 2D Bounding Box 시각화
-                    cv2.rectangle(display_frame, (x, y), (x + width, y + height), color, 2)
+                    # 2D Bounding Box 및 추정된 회전 외곽선(OBB) 시각화
+                    cv2.rectangle(display_frame, (x, y), (x + width, y + height), color, 1)
+                    cv2.polylines(display_frame, [rot_box_pts], isClosed=True, color=color, thickness=2)
+                    # 그리퍼 파지 축(회전 방향) 지시선 표시
+                    axis_len = int(min(width, height) * 0.4)
+                    dx_line = int(axis_len * np.cos(yaw_rad))
+                    dy_line = int(axis_len * np.sin(yaw_rad))
+                    cv2.line(display_frame, (u_center - dx_line, v_center - dy_line),
+                             (u_center + dx_line, v_center + dy_line), (0, 255, 255), 2)
                     cv2.circle(display_frame, (u_center, v_center), 4, (0, 0, 255), -1)
 
                     # [작업대(테이블) 유효 작업 깊이 필터링]:
                     # 바닥(Z > 1.0m)이나 적재함에 이미 떨어진 박스, 배경 물체를 배제하고
                     # 실제 작업대(테이블) 위에 놓인 박스만을 우선순위 타겟 후보로 등록
                     if self.min_target_depth <= depth_z <= self.max_target_depth:
-                        label = f"[{cls_id}] {cls_name} {score:.2f} ({depth_z:.2f}m)"
+                        label = f"[{cls_id}] {cls_name} {score:.2f} ({depth_z:.2f}m, {yaw_deg:+.1f}deg)"
                         target_x = (u_center - self.cx) * depth_z / self.fx
                         target_y = (v_center - self.cy) * depth_z / self.fy
                         target_z = depth_z
@@ -345,7 +442,10 @@ class YoloDetectorNode:
                             "cam_coords": (target_x, target_y, target_z),
                             "pixel_center": (u_center, v_center),
                             "bbox": (x, y, width, height),
-                            "depth": depth_z
+                            "depth": depth_z,
+                            "yaw_rad": yaw_rad,
+                            "yaw_deg": yaw_deg,
+                            "rot_box_pts": rot_box_pts
                         })
                     elif depth_z > 0.1:
                         # 작업대 범위를 벗어난 바닥/배경 박스는 시각화만 하고 타겟 후보에서는 배제
@@ -354,7 +454,7 @@ class YoloDetectorNode:
                         label = f"[{cls_id}] {cls_name} {score:.2f} (No Depth)"
 
                     cv2.putText(display_frame, label, (x, max(20, y - 8)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.52, color, 2)
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.50, color, 2)
 
                 # ==============================================================
                 # [우선순위 정렬]: 0번 오리지널 -> 1번 노란색 -> 2번 검은색 순서
@@ -371,15 +471,18 @@ class YoloDetectorNode:
                     cv2.putText(display_frame, "ROBOT MOVING - VISION PAUSED", (15, 33),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
                 elif best_target is not None:
-                    # 최고 우선순위 대상 하이라이트 (노란 이중 테두리)
+                    # 최고 우선순위 대상 하이라이트 (노란 이중 테두리 및 회전 박스 강조)
                     bx, by, bw, bh = best_target["bbox"]
-                    cv2.rectangle(display_frame, (bx - 3, by - 3), (bx + bw + 3, by + bh + 3), (0, 255, 255), 2)
+                    cv2.polylines(display_frame, [best_target["rot_box_pts"]], isClosed=True, color=(0, 255, 255), thickness=3)
                     tx, ty, tz = best_target["cam_coords"]
+                    tyaw = best_target["yaw_rad"]
+                    tyaw_deg = best_target["yaw_deg"]
 
-                    # 3D TF 발행
+                    # 3D TF 발행 (상자 회전각 tyaw를 Z축 회전 쿼터니언으로 전달)
+                    q_rot = tft.quaternion_from_euler(0.0, 0.0, tyaw)
                     self.tf_broadcaster.sendTransform(
                         (tx, ty, tz),
-                        (0.0, 0.0, 0.0, 1.0),
+                        q_rot,
                         rospy.Time.now(),
                         self.target_frame,
                         self.camera_frame
@@ -396,6 +499,7 @@ class YoloDetectorNode:
                             "cam_x": round(tx, 3),
                             "cam_y": round(ty, 3),
                             "cam_z": round(tz, 3),
+                            "yaw_deg": round(tyaw_deg, 1),
                             "total_detected": len(candidates)
                         }
                         self.target_info_pub.publish(json.dumps(info_dict))
@@ -403,12 +507,12 @@ class YoloDetectorNode:
                         pass
 
                     rospy.loginfo_throttle(1.5, f"[YOLO Node] Priority Target [{best_target['cls_name']} (P{best_target['cls_id']})] "
-                                                f"TF -> X: {tx:.3f}, Y: {ty:.3f}, Z: {tz:.3f}m [Score: {best_target['score']:.2f}, Total: {len(candidates)} boxes]")
+                                                f"TF -> X: {tx:.3f}, Y: {ty:.3f}, Z: {tz:.3f}m, Yaw: {tyaw_deg:+.1f}deg [Score: {best_target['score']:.2f}, Total: {len(candidates)} boxes]")
 
                     # OSD 상단 정보 배너 (초록색)
-                    info_text = f"TARGET: [Class {best_target['cls_id']}: {best_target['cls_name']}] X={tx:.2f} Y={ty:.2f} Z={tz:.2f}m (Total: {len(candidates)})"
-                    cv2.rectangle(display_frame, (10, 10), (620, 42), (0, 150, 0), -1)
-                    cv2.putText(display_frame, info_text, (15, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (255, 255, 255), 2)
+                    info_text = f"TARGET: [Class {best_target['cls_id']}: {best_target['cls_name']}] X={tx:.2f} Y={ty:.2f} Z={tz:.2f}m Yaw={tyaw_deg:+.1f}deg"
+                    cv2.rectangle(display_frame, (10, 10), (630, 42), (0, 150, 0), -1)
+                    cv2.putText(display_frame, info_text, (15, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.46, (255, 255, 255), 2)
                 elif len(detections) > 0:
                     status_text = "BOX DETECTED - ACQUIRING DEPTH..."
                     if depth_map is None:

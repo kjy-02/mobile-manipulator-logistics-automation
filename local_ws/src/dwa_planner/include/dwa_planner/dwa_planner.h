@@ -424,6 +424,7 @@ protected:
   double speed_cost_gain_;
   double path_cost_gain_;
   double dist_to_goal_th_;
+  double goal_obstacle_ignore_radius_;
   double turn_direction_th_;
   double angle_to_goal_th_;
   double sim_direction_;
@@ -467,6 +468,8 @@ protected:
   geometry_msgs::Twist current_cmd_vel_;
   std::optional<geometry_msgs::PoseStamped> goal_msg_;
   geometry_msgs::PoseArray obs_list_;
+  std::optional<nav_msgs::OccupancyGrid> latest_local_map_;
+  std::optional<geometry_msgs::PoseArray> goal_filtered_obs_list_;
   std::optional<geometry_msgs::PolygonStamped> footprint_;
   std::optional<nav_msgs::Path> edge_points_on_path_;
 

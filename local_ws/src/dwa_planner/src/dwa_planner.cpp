@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "dwa_planner/dwa_planner.h"
+#include "dwa_planner/goal_obstacle_filter.h"
 
 DWAPlanner::DWAPlanner(void)
     : local_nh_("~"), odom_updated_(false), local_map_updated_(false), scan_updated_(false), has_reached_(false),
@@ -113,7 +114,10 @@ void DWAPlanner::scan_callback(const sensor_msgs::LaserScanConstPtr &msg)
 void DWAPlanner::local_map_callback(const nav_msgs::OccupancyGridConstPtr &msg)
 {
   if (!use_scan_as_input_)
+  {
+    latest_local_map_ = *msg;
     create_obs_list(*msg);
+  }
   local_map_not_subscribe_count_ = 0;
   local_map_updated_ = true;
 }
@@ -358,6 +362,7 @@ bool DWAPlanner::can_move(void)
 geometry_msgs::Twist DWAPlanner::calc_cmd_vel(void)
 {
   geometry_msgs::Twist cmd_vel;
+  goal_filtered_obs_list_.reset();
   std::pair<std::vector<State>, bool> best_traj;
   std::vector<std::pair<std::vector<State>, bool>> trajectories;
   const size_t trajectories_size = velocity_samples_ * (yawrate_samples_ + 1);
@@ -371,8 +376,21 @@ geometry_msgs::Twist DWAPlanner::calc_cmd_vel(void)
   catch (tf::TransformException ex)
   {
     ROS_ERROR("%s", ex.what());
+    return cmd_vel;
   }
   const Eigen::Vector3d goal(goal_.pose.position.x, goal_.pose.position.y, tf::getYaw(goal_.pose.orientation));
+
+  if (goal_obstacle_ignore_radius_ > 0.0)
+  {
+    goal_filtered_obs_list_ = obs_list_;
+    if (!use_scan_as_input_ && latest_local_map_)
+      dwa_planner::extract_map_obstacles(
+          *latest_local_map_, goal_filtered_obs_list_->poses, angle_resolution_,
+          goal.x(), goal.y(), goal_obstacle_ignore_radius_);
+    else
+      dwa_planner::filter_obstacles_near_goal(
+          goal_filtered_obs_list_->poses, goal.x(), goal.y(), goal_obstacle_ignore_radius_);
+  }
 
   const double angle_to_goal = atan2(goal.y(), goal.x());
   if (M_PI / 4.0 < fabs(angle_to_goal))
@@ -447,9 +465,10 @@ bool DWAPlanner::check_collision(const std::vector<State> &traj)
   if (!use_footprint_)
     return false;
 
+  const auto &obstacles = goal_filtered_obs_list_ ? goal_filtered_obs_list_->poses : obs_list_.poses;
   for (const auto &state : traj)
   {
-    for (const auto &obs : obs_list_.poses)
+    for (const auto &obs : obstacles)
     {
       const geometry_msgs::PolygonStamped footprint = move_footprint(state);
       if (is_inside_of_robot(obs.position, footprint, state))
@@ -481,9 +500,10 @@ float DWAPlanner::calc_to_goal_cost(const std::vector<State> &traj, const Eigen:
 float DWAPlanner::calc_obs_cost(const std::vector<State> &traj)
 {
   float min_dist = obs_range_;
+  const auto &obstacles = goal_filtered_obs_list_ ? goal_filtered_obs_list_->poses : obs_list_.poses;
   for (const auto &state : traj)
   {
-    for (const auto &obs : obs_list_.poses)
+    for (const auto &obs : obstacles)
     {
       float dist;
       if (use_footprint_)
@@ -737,28 +757,7 @@ void DWAPlanner::create_obs_list(const sensor_msgs::LaserScan &scan)
 
 void DWAPlanner::create_obs_list(const nav_msgs::OccupancyGrid &map)
 {
-  obs_list_.poses.clear();
-  const double max_search_dist = hypot(map.info.origin.position.x, map.info.origin.position.y);
-  for (float angle = -M_PI; angle <= M_PI; angle += angle_resolution_)
-  {
-    for (float dist = 0.0; dist <= max_search_dist; dist += map.info.resolution)
-    {
-      geometry_msgs::Pose pose;
-      pose.position.x = dist * cos(angle);
-      pose.position.y = dist * sin(angle);
-      const int index_x = floor((pose.position.x - map.info.origin.position.x) / map.info.resolution);
-      const int index_y = floor((pose.position.y - map.info.origin.position.y) / map.info.resolution);
-
-      if ((0 <= index_x && index_x < map.info.width) && (0 <= index_y && index_y < map.info.height))
-      {
-        if (map.data[index_x + index_y * map.info.width] == 100)
-        {
-          obs_list_.poses.push_back(pose);
-          break;
-        }
-      }
-    }
-  }
+  dwa_planner::extract_map_obstacles(map, obs_list_.poses, angle_resolution_);
 }
 
 visualization_msgs::Marker DWAPlanner::create_marker_msg(

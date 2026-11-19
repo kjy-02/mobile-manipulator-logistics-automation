@@ -2,7 +2,7 @@
 <launch>
   <arg name="nodelet_manager" default="dwa_localization_nodelet_manager" />
   <arg name="points_topic" default="/velodyne_points" />
-  <arg name="map_pcd_path" default="$(find scout_dwa)/../../../maps/outdoor.pcd" />
+  <arg name="map_pcd_path" default="/home/rilab/catkin_ws/map/m304.pcd" />
   <arg name="odom_child_frame_id" default="velodyne" />
   <arg name="use_global_localization" default="true" />
   <arg name="use_imu" default="false" />

@@ -43,6 +43,8 @@ target_link_libraries(dwa_planner
 ## Testing ##
 #############
 if(CATKIN_ENABLE_TESTING)
+    add_executable(goal_obstacle_filter_test test/goal_obstacle_filter_test.cpp)
+    add_test(NAME goal_obstacle_filter_test COMMAND $<TARGET_FILE:goal_obstacle_filter_test>)
     find_package(rostest REQUIRED)
     find_package(roslint REQUIRED)
     roslint_cpp()

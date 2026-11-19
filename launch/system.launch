@@ -1,6 +1,6 @@
 <launch>
   <arg name="robot_ip" default="192.168.1.210" />
-  <arg name="map_pcd_path" default="$(dirname)/../maps/outdoor.pcd" />
+  <arg name="map_pcd_path" default="/home/rilab/catkin_ws/map/m304.pcd" />
 
   <include file="$(find scout_dwa)/launch/scout_base_for_dwa.launch">
     <arg name="is_scout_mini" value="false" />

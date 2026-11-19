@@ -1,6 +1,7 @@
 // Copyright 2020 amsl
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 #include "dwa_planner/dwa_planner.h"
@@ -15,6 +16,12 @@ void DWAPlanner::load_params(void)
   // - G -
   local_nh_.param<std::string>("GLOBAL_FRAME", global_frame_, std::string("map"));
   local_nh_.param<double>("GOAL_THRESHOLD", dist_to_goal_th_, 0.1);
+  local_nh_.param<double>("GOAL_OBSTACLE_IGNORE_RADIUS", goal_obstacle_ignore_radius_, 0.0);
+  if (!std::isfinite(goal_obstacle_ignore_radius_) || goal_obstacle_ignore_radius_ < 0.0)
+  {
+    ROS_WARN("Invalid GOAL_OBSTACLE_IGNORE_RADIUS; goal obstacle filtering disabled.");
+    goal_obstacle_ignore_radius_ = 0.0;
+  }
   // - H -
   local_nh_.param<double>("HZ", hz_, 20);
   // - M -
@@ -71,6 +78,7 @@ void DWAPlanner::print_params(void)
   // - G -
   ROS_INFO_STREAM("GLOBAL_FRAME: " << global_frame_);
   ROS_INFO_STREAM("GOAL_THRESHOLD: " << dist_to_goal_th_);
+  ROS_INFO_STREAM("GOAL_OBSTACLE_IGNORE_RADIUS: " << goal_obstacle_ignore_radius_);
   // - H -
   ROS_INFO_STREAM("HZ: " << hz_);
   // - M -

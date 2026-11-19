@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One fresh RViz goal, Scout improved planner derived from pinned AMSL DWA, DWA output relayed through the independent watchdog."""
+"""One RViz or configured map goal; DWA output relayed through the independent watchdog."""
 import argparse
 import copy
 import math
@@ -39,7 +39,8 @@ class Navigation:
                 ('/scout_dwa/dwa_planner/finish_flag', Bool, 'finish'),
                 ('/scout_dwa/footprint', PolygonStamped, 'footprint')):
             self.subscriptions.append(rospy.Subscriber(topic, cls, self.receive(key), queue_size=1))
-        self.subscriptions.append(rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.goal_cb, queue_size=1))
+        if args.goal is None:
+            self.subscriptions.append(rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.goal_cb, queue_size=1))
         self.subscriptions.append(rospy.Subscriber('/initialpose', rospy.AnyMsg, self.initialpose_cb, queue_size=1))
 
     def receive(self, key):
@@ -105,11 +106,27 @@ class Navigation:
         return 'finish' in data and bool(data['finish'][0].data)
 
     def run(self):
-        rospy.loginfo('RViz에서 2D Nav Goal로 새 목표를 지정하세요. 차량은 정지 대기 중입니다.')
+        if self.args.goal is None:
+            rospy.loginfo('RViz에서 2D Nav Goal로 새 목표를 지정하세요. 차량은 정지 대기 중입니다.')
+        else:
+            rospy.loginfo('고정 목표 사용: map X=%.3fm, Y=%.3fm, yaw=%.3frad. odometry 수신 후 주행을 시작합니다.',
+                          *self.args.goal)
         while self.goal is None and not self.stop.is_set():
             self.output.publish(Twist())
             if time.monotonic()-self.started_wall > self.args.goal_wait_seconds:
                 raise RuntimeError('목표 입력 대기 시간이 초과됐습니다.')
+            if self.args.goal is not None:
+                data = self.snapshot()
+                if 'odom' in data and time.monotonic()-data['odom'][1] <= .3:
+                    x, y, yaw = self.args.goal
+                    goal = PoseStamped()
+                    goal.header.frame_id = 'map'
+                    goal.header.stamp = rospy.Time.now()
+                    goal.pose.position.x = x
+                    goal.pose.position.y = y
+                    goal.pose.orientation.z = math.sin(yaw / 2)
+                    goal.pose.orientation.w = math.cos(yaw / 2)
+                    self.goal_cb(goal)
             self.stop.wait(.02)
         if self.stop.is_set():
             return 130
@@ -204,8 +221,12 @@ def main():
     parser.add_argument('--run', action='store_true', help='실제 차량 출력 연결')
     parser.add_argument('--max-seconds', type=float, default=300)
     parser.add_argument('--goal-wait-seconds', type=float, default=120)
-    parser.add_argument('--map-pcd', default=os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../../maps/outdoor.pcd'))
+    parser.add_argument('--goal', nargs=3, type=float, metavar=('X', 'Y', 'YAW'),
+                        help='고정 목표: map 기준 X(m) Y(m) 도착 방향 YAW(rad). 지정하면 RViz 목표 입력 없이 주행 시작')
+    parser.add_argument('--map-pcd', default='/home/rilab/catkin_ws/map/m304.pcd')
     args = parser.parse_args()
+    if args.goal is not None and not all(math.isfinite(v) for v in args.goal):
+        parser.error('goal X, Y and YAW must be finite')
     if not args.run:
         parser.print_help()
         return 0

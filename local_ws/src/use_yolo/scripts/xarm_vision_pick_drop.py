@@ -5,6 +5,7 @@ import rospy
 import sys
 import copy
 import tf
+import tf.transformations as tft
 import numpy as np
 import moveit_commander
 import actionlib
@@ -43,43 +44,42 @@ class RobotConfig:
     # [좌후방 적재함 상공 안전 자세]: 수직 하강 전 테이블 위 안전 고도(Z=+0.35m) 유지 회전 자세
     # TCP 위치: X = -0.155m, Y = +0.2694m, Z = +0.350m (Tool Z 수직 하향 정렬 유지, J2/J3 음수 안전 보장)
     DROP_PRE_JOINTS_LEFT = [
-        2.0928022861480713,    # J1: +119.91° (좌후방 적재함 방향: 0번 빨간색 박스)
+        2.0928022861480713,    # J1: +119.91° (좌후방 적재함 상공 경유 자세)
        -0.5621202184821094,    # J2:  -32.21° (안전한 음수 각도 유지)
        -1.0251964140128025,    # J3:  -58.74° (안전한 음수 각도 유지)
         1.5873166324949108,    # J4:  +90.95° (Pitch -90° 완전 직각 수직 하향 유지)
         0.0000000000000000     # J5:    0.00°
     ]
 
-    # [좌후방 적재함 하강 파지 해제 위치]: 적재함 내부 최종 Drop 위치 (Z = -0.05m)
-    DROP_JOINTS_LEFT = [
-        2.0928022861480713,    # J1: +119.91° (좌후방 적재함 방향: 0번 빨간색 박스)
-        0.1444568932056427,    # J2:  +8.28°
-       -0.3381238877773285,    # J3: -19.37°
-        0.19757288694381714,   # J4: +11.32° (Tool Z 직각 수직 하향 유지)
-        0.000061359234678093   # J5:   0.00°
+    # 색상별 전용 Drop: separated_basket의 XY와 손목 방향을 유지하고 높이만 보정.
+    # link_base -> link_tcp Z = -0.075m (URDF의 그리퍼 TCP 오프셋 0.172m 기준).
+    # 접근/복귀는 기존 좌후방 상공 자세를 사용하며, 최종 위치까지는 관절 보간 이동.
+    DROP_PRE_JOINTS_RED = list(DROP_PRE_JOINTS_LEFT)
+    DROP_JOINTS_RED = [
+        2.357590436935,
+        0.360198524466,
+       -0.541495046276,
+        0.149798171607,
+        0.741811990738
     ]
 
-    # [우후방 적재함 상공 안전 자세]: 수직 하강 전 테이블 위 안전 고도(Z=+0.35m) 유지 회전 자세
-    # TCP 위치: X = -0.155m, Y = -0.2694m, Z = +0.350m (Tool Z 수직 하향 정렬 유지, J2/J3 음수 안전 보장)
-    DROP_PRE_JOINTS_RIGHT = [
-       -2.0928022861480713,    # J1: -119.91° (우후방 적재함 방향: 1번 노란색 / 2번 파란색 박스)
-       -0.5621202184821094,    # J2:  -32.21° (안전한 음수 각도 유지)
-       -1.0251964140128025,    # J3:  -58.74° (안전한 음수 각도 유지)
-        1.5873166324949108,    # J4:  +90.95° (Pitch -90° 완전 직각 수직 하향 유지)
-        0.0000000000000000     # J5:    0.00°
+    DROP_PRE_JOINTS_YELLOW = list(DROP_PRE_JOINTS_LEFT)
+    DROP_JOINTS_YELLOW = [
+        2.174335241318,
+        0.276098247099,
+       -0.406505156775,
+        0.167398870976,
+        0.602597534657
     ]
 
-    # [우후방 적재함 하강 파지 해제 위치]: 적재함 내부 최종 Drop 위치 (Z = -0.05m)
-    DROP_JOINTS_RIGHT = [
-       -2.0928022861480713,    # J1: -119.91° (우후방 적재함 방향: 1번 노란색 / 2번 파란색 박스)
-        0.1444568932056427,    # J2:  +8.28°
-       -0.3381238877773285,    # J3: -19.37°
-        0.19757288694381714,   # J4: +11.32° (Tool Z 직각 수직 하향 유지)
-        0.0000000000000000     # J5:   0.00°
+    DROP_PRE_JOINTS_BLUE = list(DROP_PRE_JOINTS_LEFT)
+    DROP_JOINTS_BLUE = [
+        1.950009822845,
+        0.218565756288,
+       -0.291925136875,
+        0.119712433888,
+        0.372868537903
     ]
-
-    # 기존 하위 호환용 DROP_JOINTS
-    DROP_JOINTS = DROP_JOINTS_LEFT
 
     # 3. 작업 종료 원점 관절 각도 (라디안 단위, J1 ~ J5)
     # 5초간 박스 미검출 시 테이블 충돌 방지(수평 후퇴 후 수직 복귀)로 복귀
@@ -128,7 +128,7 @@ class RobotConfig:
     GRIPPER_OPEN_POS   = 0.0   # 열림 위치 (Pre-open 및 낙하 시)
     GRIPPER_CLOSE_POS  = 0.85  # 닫힘 위치 (물체 파지 시)
     GRIPPER_EFFORT     = 5.0  # 파지력 (N)
-    GRIPPER_TIMEOUT    = 5.0   # 그리퍼 응답 대기 시간 (초)
+    GRIPPER_TIMEOUT    = 20.0   # 그리퍼 응답 대기 시간 (초)
 
     # 3. 모션 속도 및 가속도 스케일링 (0.0 ~ 1.0)
     # 급격한 가속/감속으로 인한 C31(이상 전류/충돌 감지) 방지 및 부드럽고 안정적인 이동을 위해 속도/가속도 안정화
@@ -180,6 +180,12 @@ class RobotConfig:
     MAX_TARGET_CAM_Z        = 0.55   # 카메라 기준 최대 유효 거리 (55cm 초과 시 테이블 너머 바닥/배경으로 간주하여 배제)
     REQUIRED_CONSECUTIVE_DET = 3     # 연속 n회 이상 안정 감지 확인 시 파지 착수 (찰나의 노이즈 배제)
 
+    # 9. 상자 기울기(Yaw) 연동 손목(J5) 회전 파지 파라미터
+    # 카메라 이미지 평면 회전각(yaw_rad: 시계 방향 +)을 그리퍼 손목(J5) 회전각으로 매핑하는 부호/배율 계수
+    # 카메라가 수직 하향(Tool Z=[0,0,-1])을 바라보므로 이미지상 시계방향(+yaw) 회전은 J5 +회전과 동일 방향 (반대일 경우 -1.0으로 변경)
+    BOX_YAW_TO_J5_SIGN      = 1.0
+    J5_YAW_OFFSET_RAD       = 0.0    # 그리퍼 기본 손목 각도 미세 오프셋 (라디안)
+
 # ==============================================================================
 # [xArm5 5-DOF 전용 수직 파지 기구학(IK) 해석 엔진]
 # MoveIt 기본 KDL 솔버는 5자유도 로봇에서 6D Pose 목표에 대한 자유도 부족으로
@@ -216,10 +222,10 @@ def forward_kinematics_xarm5(joints):
     tool_z = T5[:3, 2]
     return tcp_pos, tool_z
 
-def solve_xarm5_ik_vertical(x, y, z, seed_joints=None):
+def solve_xarm5_ik_vertical(x, y, z, seed_joints=None, target_yaw=0.0):
     """(x, y, z) 위치에서 그리퍼가 수직 하향(Pitch -90도)이고,
-    물체가 테이블 좌/우로 치우쳐 J1이 회전하더라도 그리퍼가 항상 테이블과 평행(Square)을
-    유지하도록 J1 회전량만큼 J5를 자동 상쇄 보정하는 5개 관절각 산출
+    물체가 테이블 좌/우로 치우쳐 J1이 회전하더라도 J1 회전량을 자동 상쇄 보정하면서,
+    추가로 YOLO+OpenCV가 추정한 상자의 기울기(target_yaw, 라디안)만큼 손목(J5)을 회전시키는 5개 관절각 산출
     """
     # [전방 180도 및 최대 도달 한계 안전 가드]: C31 과전류 및 xArm5 리치 한계 초과 원천 차단
     max_j1_rad = np.radians(RobotConfig.FRONT_ANGLE_LIMIT_DEG)
@@ -232,10 +238,11 @@ def solve_xarm5_ik_vertical(x, y, z, seed_joints=None):
         rospy.logwarn_throttle(2.0, f"[IK Engine] Target (X={x:.3f}, Y={y:.3f}, R={target_dist:.3f}m) exceeds max safe reach ({RobotConfig.MAX_SAFE_X:.2f}m)! C31 overload prevention: IK rejected.")
         return None
 
-    # [J1 회전 연동 J5 자동 상쇄 회전]:
-    # 정면 기준 자세(J1 = 0도 = 0.0 rad) 대비 J1이 회전한 각도만큼 J5를 정밀 보정하여
-    # 팔이 좌/우 어느 각도로 회전하더라도 그리퍼 핑거는 항상 정면 테이블 모서리와 100% 평행을 유지함
-    j5_comp = j1 - 0.0000000000
+    # [J1 회전 연동 J5 자동 상쇄 + 상자 회전각(target_yaw) 반영]:
+    # 정면 기준 자세(J1 = 0도) 대비 J1 회전량을 상쇄하고, 상자가 기울어진 각도(target_yaw)만큼 J5 손목을 회전
+    j5_comp = j1 + (RobotConfig.BOX_YAW_TO_J5_SIGN * float(target_yaw)) + RobotConfig.J5_YAW_OFFSET_RAD
+    # J5 관절 가동 범위(-6.28 ~ +6.28 rad) 내로 안전 클램핑
+    j5_comp = float(np.clip(j5_comp, -3.10, 3.10))
 
     seeds = []
     if seed_joints is not None:
@@ -397,7 +404,7 @@ def move_joints_interpolated(arm, target_joints, duration=4.5, steps=50, ensure_
 # ==============================================================================
 # [헬퍼 함수 3: MoveIt Pose 이동]
 # ==============================================================================
-def move_to_pose(arm, pose, end_effector_link=None, vel=RobotConfig.VEL_SCALE, acc=RobotConfig.ACC_SCALE):
+def move_to_pose(arm, pose, end_effector_link=None, vel=RobotConfig.VEL_SCALE, acc=RobotConfig.ACC_SCALE, target_yaw=0.0):
     arm.set_max_velocity_scaling_factor(vel)
     arm.set_max_acceleration_scaling_factor(acc)
 
@@ -408,9 +415,9 @@ def move_to_pose(arm, pose, end_effector_link=None, vel=RobotConfig.VEL_SCALE, a
     # xArm5 전용 수직 역기구학(IK) 해석 후 관절 공간 직접 이동 (100% 안전 보장)
     # MoveIt 기본 KDL/OMPL 솔버의 무리한 샘플링으로 인한 충돌 및 C31 이상전류 에러를 원천 차단
     cur_joints = arm.get_current_joint_values() if hasattr(arm, 'get_current_joint_values') else None
-    ik_joints = solve_xarm5_ik_vertical(pos_x, pos_y, pos_z, seed_joints=cur_joints)
+    ik_joints = solve_xarm5_ik_vertical(pos_x, pos_y, pos_z, seed_joints=cur_joints, target_yaw=target_yaw)
     if ik_joints is not None:
-        rospy.loginfo(f"[Arm Python] Exact 5-DOF IK solved for Z={pos_z:.3f}m: joints={[round(j, 3) for j in ik_joints]}. Executing Joint motion...")
+        rospy.loginfo(f"[Arm Python] Exact 5-DOF IK solved for Z={pos_z:.3f}m (Yaw={np.degrees(target_yaw):+.1f}°): joints={[round(j, 3) for j in ik_joints]}. Executing Joint motion...")
         return move_to_joints(arm, ik_joints, vel=vel, acc=acc)
 
     rospy.logerr(f"[Arm Python] ❌ 목표 위치 (X={pos_x:.3f}, Y={pos_y:.3f}, Z={pos_z:.3f}m)가 안전 도달 한계를 벗어났습니다. C31 과부하 및 본체 충돌 방지를 위해 이동을 즉시 차단합니다.")
@@ -428,13 +435,12 @@ def move_to_initial_pose_safely(arm, eef_link=None):
     cur_pose_stamped = arm.get_current_pose(eef_link) if eef_link else arm.get_current_pose()
     cur_pos = cur_pose_stamped.pose.position
 
-    # 후방 적재함 영역(X < MIN_SAFE_X)에 위치한 경우: 적재함 상공 안전 고도(Z=0.35m)로 관절 상승
+    # 후방 적재함 영역(X < MIN_SAFE_X)에 위치한 경우: 좌후방 적재함 상공 안전 고도(Z=0.35m)로 관절 상승
     if cur_pos.x < RobotConfig.MIN_SAFE_X:
         cur_j = arm.get_current_joint_values() if hasattr(arm, 'get_current_joint_values') else None
         if cur_j is not None and cur_pos.z < 0.30:
-            target_pre = RobotConfig.DROP_PRE_JOINTS_LEFT if cur_j[0] > 0 else RobotConfig.DROP_PRE_JOINTS_RIGHT
             rospy.loginfo(f"[Safe Init] Rear drop area detected (Z={cur_pos.z:.3f}m). Elevating to pre-drop altitude first...")
-            move_to_joints(arm, target_pre)
+            move_to_joints(arm, RobotConfig.DROP_PRE_JOINTS_LEFT)
             rospy.sleep(0.3)
     # 전방 테이블 작업 영역에서 고도가 안전 고도보다 낮을 경우 수직 직선 상승 수행
     elif cur_pos.z < RobotConfig.SAFE_ASCENT_Z:
@@ -600,7 +606,8 @@ def wait_for_target_box(tf_listener, tracker, timeout=RobotConfig.NO_DETECTION_T
     """
     초기 자세에서 대기하며 YOLO 대상 물체(TF & Class)를 수신합니다.
     - timeout(5초) 동안 유효한 검출이 없으면 None 반환 (작업 종료 판정)
-    - 유효한 검출이 연속 REQUIRED_CONSECUTIVE_DET회 이상 안정적으로 들어오면 (class_id, (cam_x, cam_y, cam_z)) 반환
+    - 유효한 검출이 연속 REQUIRED_CONSECUTIVE_DET회 이상 안정적으로 들어오면
+      (class_id, (cam_x, cam_y, cam_z), avg_yaw_rad) 반환
     """
     arrival_time = rospy.Time.now()
     start_wait_time = rospy.Time.now()
@@ -608,6 +615,7 @@ def wait_for_target_box(tf_listener, tracker, timeout=RobotConfig.NO_DETECTION_T
 
     valid_consecutive = 0
     history_trans = []
+    history_yaws = []
     detected_class = 0
 
     while not rospy.is_shutdown():
@@ -625,32 +633,43 @@ def wait_for_target_box(tf_listener, tracker, timeout=RobotConfig.NO_DETECTION_T
                 if latest_tf_time >= arrival_time and time_since_tf < 0.5:
                     (curr_t, curr_r) = tf_listener.lookupTransform(RobotConfig.BASE_FRAME, RobotConfig.TARGET_FRAME, rospy.Time(0))
                     cx, cy, cz = curr_t
+                    _, _, cyaw = tft.euler_from_quaternion(curr_r)
+                    # [-pi/4, +pi/4] 범위 확인
+                    cyaw = float(np.clip(cyaw, -np.pi / 4.0, np.pi / 4.0))
 
                     if RobotConfig.MIN_TARGET_CAM_Z <= cz <= RobotConfig.MAX_TARGET_CAM_Z:
                         history_trans.append(curr_t)
+                        history_yaws.append(cyaw)
                         valid_consecutive += 1
                         detected_class = tracker.get_class()
                         cls_name = RobotConfig.CLASS_NAMES.get(detected_class, f"Class {detected_class}")
                         rospy.loginfo(f"[Vision] Box Detected ({valid_consecutive}/{RobotConfig.REQUIRED_CONSECUTIVE_DET}): "
-                                      f"[{cls_name}] Cam X={cx:.3f}, Y={cy:.3f}, Z={cz:.3f}m")
+                                      f"[{cls_name}] Cam X={cx:.3f}, Y={cy:.3f}, Z={cz:.3f}m, Yaw={np.degrees(cyaw):+.1f}°")
 
                         if valid_consecutive >= RobotConfig.REQUIRED_CONSECUTIVE_DET:
                             avg_trans = np.mean(history_trans, axis=0).tolist()
-                            rospy.loginfo(f"[Vision] ✅ Target Confirmed! [{cls_name}] Average TF -> X={avg_trans[0]:.3f}, Y={avg_trans[1]:.3f}, Z={avg_trans[2]:.3f}m")
-                            return (detected_class, avg_trans)
+                            # 90도 주기(±45도 경계)에서의 평균 왜곡 방지를 위해 중앙값(median) 사용
+                            avg_yaw = float(np.median(history_yaws))
+                            rospy.loginfo(f"[Vision] ✅ Target Confirmed! [{cls_name}] Average TF -> "
+                                          f"X={avg_trans[0]:.3f}, Y={avg_trans[1]:.3f}, Z={avg_trans[2]:.3f}m, Yaw={np.degrees(avg_yaw):+.1f}°")
+                            return (detected_class, avg_trans, avg_yaw)
                     else:
                         rospy.logwarn_throttle(1.5, f"[Vision] ⚠️ 감지된 타겟(Cam Z={cz:.3f}m)이 테이블 유효 작업 깊이({RobotConfig.MIN_TARGET_CAM_Z:.2f}m ~ {RobotConfig.MAX_TARGET_CAM_Z:.2f}m)를 벗어나 배제되었습니다.")
                         valid_consecutive = 0
                         history_trans.clear()
+                        history_yaws.clear()
                 else:
                     valid_consecutive = 0
                     history_trans.clear()
+                    history_yaws.clear()
             else:
                 valid_consecutive = 0
                 history_trans.clear()
+                history_yaws.clear()
         except (tf.Exception, Exception):
             valid_consecutive = 0
             history_trans.clear()
+            history_yaws.clear()
 
         rate.sleep()
 
@@ -837,11 +856,11 @@ def main():
     # [다중 박스 연속 자동 픽앤플레이스 루프]
     # 1. 현재 방식대로 초기 자세로 이동
     # 2. yolo를 통한 박스 검출 시작
-    # 3. 0번 오리지널 -> 좌후방 drop / 1번 노란색 & 2번 검은색 -> 우후방 drop
+    # 3. 0번(빨간색) / 1번(노란색) / 2번(파란색) -> 좌후방 상공 경유 후 색상별 전용 위치에 drop
     # 4. drop 후 다시 초기 자세로 이동
     # 5. 초기 자세에서 다시 박스 검출 시작
     # 6. 5초간 검출 후 검출되지 않을 시 테이블 간섭 방지(수평 이동 후 수직 이동) 원점(0도) 복귀
-    # 7. 여러 박스 검출 시 0번(오리지널) -> 1번(노란색) -> 2번(검은색) 순으로 작업 진행
+    # 7. 여러 박스 검출 시 0번(빨간색) -> 1번(노란색) -> 2번(파란색) 순으로 작업 진행
     # ==========================================================================
     cycle = 0
     total_picked = 0
@@ -874,9 +893,9 @@ def main():
             rospy.loginfo(f"[CYCLE {cycle}] ⏱️ {RobotConfig.NO_DETECTION_TIMEOUT:.1f}초 동안 검출된 박스가 없습니다. 모든 박스 작업이 완료되었습니다!")
             break
 
-        target_cls, (cam_x, cam_y, cam_z) = target_result
+        target_cls, (cam_x, cam_y, cam_z), target_yaw = target_result
         cls_name = RobotConfig.CLASS_NAMES.get(target_cls, f"Class {target_cls}")
-        rospy.loginfo(f"[CYCLE {cycle}] 🎯 Target Confirmed: [{cls_name}] (Class {target_cls}) at Cam X={cam_x:.3f}, Y={cam_y:.3f}, Z={cam_z:.3f}m")
+        rospy.loginfo(f"[CYCLE {cycle}] 🎯 Target Confirmed: [{cls_name}] (Class {target_cls}) at Cam X={cam_x:.3f}, Y={cam_y:.3f}, Z={cam_z:.3f}m, Yaw={np.degrees(target_yaw):+.1f}°")
 
         # [STEP 4] 로봇 모션 중 비전 일시 정지 (카메라 회전/흔들림 중 오인식 방지)
         vision_enable_pub.publish(Bool(data=False))
@@ -913,15 +932,15 @@ def main():
             rospy.logwarn(f"[CYCLE {cycle}] 💡 조치 안내: 무리한 팔 뻗음으로 인한 C31 이상전류 방지를 위해 해당 박스를 건너뜁니다. Scout 차량을 테이블 방향으로 약 10~15cm 전진시켜 주세요!")
             continue
 
-        # [STEP 6] Pre-Grasp 접근 및 Final Grasp 하강
-        rospy.loginfo(f"[CYCLE {cycle} - STEP 3-1] Moving to Pre-Grasp Pose (Z: {pre_grasp_pose.position.z:.3f}m)...")
-        if not move_to_pose(arm, pre_grasp_pose, end_effector_link=eef_link):
+        # [STEP 6] Pre-Grasp 접근 및 Final Grasp 하강 (상자 회전각 target_yaw만큼 J5 손목 회전 적용)
+        rospy.loginfo(f"[CYCLE {cycle} - STEP 3-1] Moving to Pre-Grasp Pose (Z: {pre_grasp_pose.position.z:.3f}m, Box Yaw: {np.degrees(target_yaw):+.1f}°)...")
+        if not move_to_pose(arm, pre_grasp_pose, end_effector_link=eef_link, target_yaw=target_yaw):
             rospy.logerr(f"[CYCLE {cycle}] Failed to reach Pre-Grasp pose.")
             continue
         rospy.sleep(0.3)
 
-        rospy.loginfo(f"[CYCLE {cycle} - STEP 3-2] Lowering to Final Grasp Pose (Z: {grasp_pose.position.z:.3f}m)...")
-        if not move_to_pose(arm, grasp_pose, end_effector_link=eef_link):
+        rospy.loginfo(f"[CYCLE {cycle} - STEP 3-2] Lowering to Final Grasp Pose (Z: {grasp_pose.position.z:.3f}m, Box Yaw: {np.degrees(target_yaw):+.1f}°)...")
+        if not move_to_pose(arm, grasp_pose, end_effector_link=eef_link, target_yaw=target_yaw):
             rospy.logerr(f"[CYCLE {cycle}] Failed to reach Grasp pose.")
             continue
         rospy.sleep(0.3)
@@ -931,9 +950,9 @@ def main():
         control_gripper(gripper_client, RobotConfig.GRIPPER_CLOSE_POS, RobotConfig.GRIPPER_EFFORT)
         rospy.sleep(0.5)
 
-        # [STEP 8] 물체 들어 올리기 (1차 수직 상승: 파지 위치 이탈)
+        # [STEP 8] 물체 들어 올리기 (1차 수직 상승: 파지 위치 이탈 - 파지 당시의 손목 회전각 유지)
         rospy.loginfo(f"[CYCLE {cycle} - STEP 5-1] Lifting object vertically (Z: {pre_grasp_pose.position.z:.3f}m)...")
-        if not move_to_pose(arm, pre_grasp_pose, end_effector_link=eef_link):
+        if not move_to_pose(arm, pre_grasp_pose, end_effector_link=eef_link, target_yaw=target_yaw):
             rospy.logwarn(f"[CYCLE {cycle}] 1차 수직 상승 실패. 현재 위치 유지 후 후퇴 진행.")
         rospy.sleep(0.2)
 
@@ -953,16 +972,19 @@ def main():
             move_to_pose(arm, retract_pose, end_effector_link=eef_link)
             rospy.sleep(0.2)
 
-        # [STEP 9] 클래스별 목적지 판별 및 2단계 안전 적재 이동 (적재 방향 선회 -> 적재함 수직 하강)
-        # 0번: 좌후방(DROP_JOINTS_LEFT) / 1번 & 2번: 우후방(DROP_JOINTS_RIGHT)
-        if target_cls == 1:
-            target_pre_drop_joints = RobotConfig.DROP_PRE_JOINTS_RIGHT
-            target_drop_joints     = RobotConfig.DROP_JOINTS_RIGHT
-            drop_loc_name          = "우후방 (Right-Rear, J1=-120°)"
+        # [STEP 9] 색상별 드랍: 기존 좌후방 상공 경유 -> 전용 위치(Z=-0.075m)
+        if target_cls == 0:
+            target_pre_drop_joints = RobotConfig.DROP_PRE_JOINTS_RED
+            target_drop_joints     = RobotConfig.DROP_JOINTS_RED
+            drop_loc_name          = "빨간색 전용 Drop (Z=-0.075m)"
+        elif target_cls == 1:
+            target_pre_drop_joints = RobotConfig.DROP_PRE_JOINTS_YELLOW
+            target_drop_joints     = RobotConfig.DROP_JOINTS_YELLOW
+            drop_loc_name          = "노란색 전용 Drop (Z=-0.075m)"
         else:
-            target_pre_drop_joints = RobotConfig.DROP_PRE_JOINTS_LEFT
-            target_drop_joints     = RobotConfig.DROP_JOINTS_LEFT
-            drop_loc_name          = "좌후방 (Left-Rear, J1=+120°)"
+            target_pre_drop_joints = RobotConfig.DROP_PRE_JOINTS_BLUE
+            target_drop_joints     = RobotConfig.DROP_JOINTS_BLUE
+            drop_loc_name          = "파란색 전용 Drop (Z=-0.075m)"
 
         # [STEP 9-1] 몸 쪽 안전 반경(R ~ 0.38m)에서 적재 방향으로 선회 (테이블 위 타 물체 간섭 100% 회피)
         # 페이로드 파지 상태를 고려하여 duration=5.5초, steps=55로 더욱 부드러운 S-curve 가감속 적용
@@ -974,8 +996,8 @@ def main():
             continue
         rospy.sleep(0.3)
 
-        # [STEP 9-2] 적재함 바로 위 상공에서 적재함 바닥으로 수직 하강
-        rospy.loginfo(f"[CYCLE {cycle} - STEP 6-2] Lowering vertically into {drop_loc_name} bin...")
+        # [STEP 9-2] 상공 경유점에서 최종 드랍 관절 자세로 이동 (수직 직선 경로 아님)
+        rospy.loginfo(f"[CYCLE {cycle} - STEP 6-2] Moving from pre-drop checkpoint into {drop_loc_name} bin...")
         if not move_joints_interpolated(arm, target_drop_joints, duration=4.0, steps=40, ensure_negative_j2_j3=False):
             rospy.logerr(f"[CYCLE {cycle}] Failed to lower into drop pose!")
             reset_xarm_robot_state_and_mode()
@@ -987,8 +1009,8 @@ def main():
         control_gripper(gripper_client, RobotConfig.GRIPPER_OPEN_POS, RobotConfig.GRIPPER_EFFORT)
         rospy.sleep(0.5)
 
-        # [STEP 11] 적재함 상공으로 수직 재상승 (충돌 없이 안전하게 초기 자세 복귀 준비)
-        rospy.loginfo(f"[CYCLE {cycle} - STEP 6-4] Elevating vertically back to pre-drop altitude before returning...")
+        # [STEP 11] 기존 좌후방 상공 경유점으로 복귀
+        rospy.loginfo(f"[CYCLE {cycle} - STEP 6-4] Returning to pre-drop checkpoint before returning to initial pose...")
         if not move_joints_interpolated(arm, target_pre_drop_joints, duration=4.0, steps=40, ensure_negative_j2_j3=False):
             reset_xarm_robot_state_and_mode()
         rospy.sleep(0.3)

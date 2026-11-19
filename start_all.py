@@ -41,7 +41,7 @@ def system_state():
 def main():
     parser = argparse.ArgumentParser(description='CAN 및 ROS 준비 환경 실행; 주행·파지는 별도 명령으로 시작')
     parser.add_argument('--robot-ip', default='192.168.1.210')
-    parser.add_argument('--map-pcd', default=str(Path(__file__).resolve().parent / 'maps' / 'outdoor.pcd'))
+    parser.add_argument('--map-pcd', default='/home/rilab/catkin_ws/map/m304.pcd')
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     import rospkg
