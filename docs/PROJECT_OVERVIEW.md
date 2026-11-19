@@ -4,4 +4,4 @@ SCOUT 2.0과 xArm5를 결합해 실내 물류 작업대의 상자를 분류해 �
 
 HDL Graph SLAM으로 작성한 PCD 지도를 HDL Localization에 사용한다. 운용 지도는 `maps/m304.pcd`다. RViz에서 픽업존을 지정하면 DWA가 접근하고, 완료 신호가 들어오면 차량 정지와 주행 종료를 거쳐 RGB-D 인식 및 로봇팔 단계가 시작된다.
 
-실내 시연에서 픽업존 접근과 차량 정지, 빨강·노랑·파랑 상자의 순차 파지·적재를 확인했다. [시연 영상](https://app.notion.com/p/41c18a17dfa6816c8ad6ec392436eaca)
+실내 시연에서 픽업존 접근과 차량 정지, 빨강·노랑·파랑 상자의 순차 파지·적재를 확인했다. [시연 영상](https://youtu.be/7SqIaekgKKs)

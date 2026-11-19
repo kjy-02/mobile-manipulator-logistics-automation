@@ -1,6 +1,6 @@
 # 모바일 매니퓰레이터 물류 자동화 시스템
 
-**[▶ 실내 통합 시연 보기](https://app.notion.com/p/41c18a17dfa6816c8ad6ec392436eaca#41d18a17dfa6819fbf0eebe2973f869b)** · [시스템 기술 상세](docs/SYSTEM_DESIGN.md) · [통합 시험 문제 해결](docs/INTEGRATION_DEBUGGING.md)
+**[▶ 실내 통합 시연 보기](https://youtu.be/7SqIaekgKKs)** · [시스템 기술 상세](docs/SYSTEM_DESIGN.md) · [통합 시험 문제 해결](docs/INTEGRATION_DEBUGGING.md)
 
 SCOUT 2.0과 xArm5를 결합해 **실내 픽업존까지 이동하고, 작업대의 상자를 인식해 차량 측면 트레이에 순서대로 적재**하는 3인 팀 졸업작품입니다.
 
