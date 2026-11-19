@@ -2,7 +2,19 @@
 
 **Mobile Manipulator Logistics Automation System**
 
-SCOUT 2.0과 xArm5를 결합해 **픽업존 접근 주행 → 정지 → 상자 인식 → 파지·분류 적재**를 연결한 졸업작품입니다. 물품에 별도의 시각 마커를 부착하지 않고 RGB-D 영상으로 상자의 위치와 종류를 파악하는 물류 자동화 시스템을 목표로 구성했습니다.
+SCOUT 2.0과 xArm5를 결합해 **실내 물류 작업대의 상자 분류와 순차 적재**를 자동화하는 3인 팀 졸업작품입니다. 실내 지도에서 픽업존까지 주행해 정지하면 비전 인식과 파지로 전환합니다. 빨강 → 노랑 → 파랑 순서로 상자를 파지해 차량 측면 트레이에 적재하는 동작을 실내 시연에서 확인했습니다.
+
+김재윤 담당 범위는 지도 작성, HDL Localization 설정, DWA 수정, 전체 통합 시험입니다.
+
+## 실내 통합본의 동작
+
+- 2026년 11월 17일 통합 코드 스냅샷은 실내 지도 `m304.pcd`를 사용합니다. DWA 도착 허용 거리 설정은 **0.3 m**입니다.
+- DWA 완료 신호(`finish_flag`)를 받으면 차량을 정지시키고 주행 프로그램을 종료한 뒤 YOLOv8n과 xArm5를 실행합니다.
+- 실내 영상에서 확인한 범위는 픽업존 접근·정지와 세 상자의 순차 적재입니다.
+
+## 10월 공개 코드와 시연
+
+아래 실행 안내와 지도·설정값은 **이 저장소에 포함된 10월 공개 코드**에 해당합니다. 아래의 0.5 m는 그 버전의 설정입니다. 11월 실내 통합본은 별도 스냅샷입니다.
 
 | 항목 | 내용 |
 |---|---|
@@ -11,17 +23,17 @@ SCOUT 2.0과 xArm5를 결합해 **픽업존 접근 주행 → 정지 → 상자 
 | 김재윤 담당 | 지도 작성, localization 적용·설정, DWA 수정, 전체 통합 테스트 |
 | 팀원 역할 | xArm 관련 작업 1인, 프로젝트 보조 1인 |
 
-SLAM·위치 추정·DWA의 기존 패키지를 활용하고 프로젝트 장비에 맞게 구성·수정·통합했습니다. 논문 「모바일 매니퓰레이터 물류 자동화 시스템」은 작성 중이며, README는 현재 코드와 실물 시연에서 확인한 동작을 중심으로 정리했습니다.
+SLAM·위치 추정·DWA의 기존 패키지를 활용하고 프로젝트 장비에 맞게 구성·수정·통합했습니다. 이 절은 10월 공개본의 코드와 시연 기록을 정리합니다.
 
 <img src="media/robot-overview.png" alt="Scout와 xArm5를 결합한 실험 장비" width="640">
 
-## 시연과 결과
+### 이전 야외 시연
 
 [야외 통합 시연 영상](https://github.com/kjy-02/mobile-manipulator-logistics-automation/releases/tag/demo-v1) · [시스템 기술 설명](docs/SYSTEM_DESIGN.md) · [통합 문제와 해결](docs/INTEGRATION_DEBUGGING.md)
 
 야외에서 목표 위치까지 주행한 뒤 차량을 정지하고, 작업대의 물체를 검출해 파지·분류하는 통합 시연을 진행했습니다. L515 카메라의 미사용 pointcloud 기능을 비활성화해 통합 실행 중 카메라 미송출 문제를 해결했습니다. 충전기 분리 시 나타난 간헐적인 프레임 저하는 절전 모드 전환에 따른 현상으로 추정합니다.
 
-| 지도 작성 결과 | 최신 객체 검출 화면 |
+| 지도 작성 결과 | 객체 검출 화면 |
 |---|---|
 | ![3D LiDAR 지도](media/slam-map.jpg) | ![빨강·노랑·파랑 상자 검출](media/detection-latest.png) |
 
@@ -47,7 +59,7 @@ flowchart LR
 |---|---|
 | `local_ws/src/scout_dwa` | 차량·LiDAR·지도 연결, 목표 주행, watchdog, 설정 |
 | `local_ws/src/dwa_planner` | 수정된 AMSL DWA 계산 코드 |
-| `local_ws/src/use_yolo` | 최신 xArm 파지 코드, YOLO 검출 코드, ONNX 모델 |
+| `local_ws/src/use_yolo` | 10월 공개본의 xArm 파지 코드, YOLO 검출 코드, ONNX 모델 |
 | `launch/system.launch` | 전체 준비 환경 |
 | `start_all.sh`, `start_all.py` | 빌드·환경 적용·준비 환경 실행 |
 | `run_dwa_then_xarm.py` | DWA 종료 후 비전·파지 launch 순차 실행 |
@@ -124,7 +136,7 @@ python3 run_dwa_then_xarm.py --run --map-pcd "$PWD/maps/floor3.pcd" --max-second
 
 하드실은 `maps/hard.pcd`를 사용합니다. xArm 기본 IP는 `192.168.1.210`이며 준비 명령의 `--robot-ip`로 변경합니다. LiDAR IP·센서 TF·관절 자세·파지 오프셋은 현재 실험 장비의 값이므로 장비가 바뀌면 각 launch와 `RobotConfig`를 확인해야 합니다.
 
-## 현재 동작 설정
+## 10월 공개본 동작 설정
 
 - DWA 최소 속도 설정: `0.1 m/s`. 출발 시 가속도 제한을 지키도록 최소 후보가 최대 후보를 넘지 않게 보정했습니다.
 - 목표 속도 설정: `0.55 m/s`. 실제 주행 속도를 보장하는 값은 아닙니다.
@@ -133,8 +145,8 @@ python3 run_dwa_then_xarm.py --run --map-pcd "$PWD/maps/floor3.pcd" --max-second
 - 외부 `cmd_vel_guard`는 현재 목표 주행 launch에서 실행하지 않습니다. DWA 자체 충돌 검사, 명령·차량 상태 검사, 독립 watchdog은 유지합니다.
 - 카메라 해상도·fps는 드라이버 자동 선택이며 RealSense pointcloud 필터는 꺼져 있습니다. DWA의 LiDAR pointcloud와 카메라 깊이 영상은 사용합니다.
 - YOLO 화면 표시는 기본 활성화, OpenCV 스레드는 기본값, 반복 주기는 최대 30Hz입니다. 실제 추론 속도는 PC에 따라 다릅니다.
-- 최신 모델 클래스: `red_box`, `yellow_box`, `blue_box`.
-- 최신 xArm 코드는 초기 자세에서 비전을 활성화하고 검출·파지·적재를 반복합니다. 미검출 대기 설정은 `NO_DETECTION_TIMEOUT=5.0`초입니다. 구체적 관절값·순서는 현재 소스를 기준으로 합니다.
+- 공개본 모델 클래스: `red_box`, `yellow_box`, `blue_box`.
+- 10월 공개본의 xArm 코드는 초기 자세에서 비전을 활성화하고 검출·파지·적재를 반복합니다. 미검출 대기 설정은 `NO_DETECTION_TIMEOUT=5.0`초입니다. 구체적 관절값·순서는 현재 소스를 기준으로 합니다.
 
 ## 로그와 확인
 
