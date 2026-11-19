@@ -48,9 +48,18 @@ SCOUT 2.0과 xArm5를 결합해 **실내 픽업존까지 이동하고, 작업대
 
 HDL Graph SLAM으로 3D 점군 지도를 저장합니다. 주행할 때는 HDL Localization이 실시간 LiDAR 점군을 저장 지도에 NDT 정합해 차량 자세를 추정합니다. 주행 장애물 격자는 실시간 점군으로 생성합니다.
 
-<img src="media/indoor-map-m304.png" alt="현재 실내 지도 m304.pcd의 주요 구간을 위에서 본 점군 이미지. 색은 높이를 나타냅니다." width="620">
+<table>
+<tr>
+<td width="50%"><a href="media/indoor-map-m304.png"><img src="media/indoor-map-m304.png" alt="m304 실내 점군 지도를 위에서 본 모습"></a></td>
+<td width="50%"><a href="media/outdoor-map.png"><img src="media/outdoor-map.png" alt="야외 점군 지도를 위에서 본 모습"></a></td>
+</tr>
+<tr>
+<td align="center">실내 지도 · <a href="maps/m304.pcd">m304.pcd</a></td>
+<td align="center">야외 지도 · <a href="maps/outdoor.pcd">outdoor.pcd</a></td>
+</tr>
+</table>
 
-실행에 사용하는 [실내 지도 m304.pcd](maps/m304.pcd)의 주요 구간을 위에서 본 모습입니다. 색은 각 점의 높이입니다.
+각 지도의 주요 구간을 위에서 본 모습입니다. 색은 높이를 나타내며, 가로·세로 축과 높이 범례의 범위는 지도마다 다릅니다. 아래 실행 예시는 실내 지도 `m304.pcd`를 사용합니다.
 
 ### 2. DWA 접근 주행과 단계 전환
 
