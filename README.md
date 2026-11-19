@@ -50,7 +50,7 @@ HDL Graph SLAM으로 3D 점군 지도를 저장합니다. 주행할 때는 HDL L
 
 <table>
 <tr>
-<td width="50%"><a href="media/indoor-map-m304.png"><img src="media/indoor-map-m304.png" alt="m304 실내 점군 지도를 위에서 본 모습"></a></td>
+<td width="50%"><a href="media/indoor-map-m304.png"><img src="media/indoor-map-m304.png" alt="m304 실내 점군에서 네 벽 주변의 점을 표시한 방 외곽"></a></td>
 <td width="50%"><a href="media/outdoor-map.png"><img src="media/outdoor-map.png" alt="야외 점군 지도를 위에서 본 모습"></a></td>
 </tr>
 <tr>
@@ -59,7 +59,7 @@ HDL Graph SLAM으로 3D 점군 지도를 저장합니다. 주행할 때는 HDL L
 </tr>
 </table>
 
-각 지도의 주요 구간을 위에서 본 모습입니다. 색은 높이를 나타내며, 가로·세로 축과 높이 범례의 범위는 지도마다 다릅니다. 아래 실행 예시는 실내 지도 `m304.pcd`를 사용합니다.
+실내 지도 이미지는 방 벽 방향에 맞춰 회전하고, 네 벽 주변의 점만 표시했습니다. 야외 지도는 주요 구간을 위에서 본 모습입니다. 두 이미지에서 색은 점의 높이를 나타냅니다. 아래 실행 예시는 실내 지도 `m304.pcd`를 사용합니다.
 
 ### 2. DWA 접근 주행과 단계 전환
 
