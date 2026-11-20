@@ -1,11 +1,11 @@
-# Values accepted by the user are recorded with their source; other values stay null.
+# The recorded values include their source. Unverified values remain null.
 scout_model: null
 lidar_model: VLP-16-A  # 2026-09-30: device CGI info + live UDP confirmed
 lidar_frame: velodyne  # live /velodyne_points header confirmed
 base_to_lidar: {x: 0.35, y: 0.0, z: 0.0, roll: 0.0, pitch: 0.0, yaw: 0.0}
-base_to_lidar_source: user accepted existing mounting configuration; not newly measured
+base_to_lidar_source: existing mounting configuration retained; not newly measured
 footprint: [[0.4625, 0.3498], [0.4625, -0.3498], [-0.4625, -0.3498], [-0.4625, 0.3498]]
-footprint_source: user confirmed current footprint dimensions
+footprint_source: current footprint dimensions confirmed during field setup
 max_safe_velocity: null
 max_safe_yawrate: null
 max_acceleration: null

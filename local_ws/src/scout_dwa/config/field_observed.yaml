@@ -9,7 +9,7 @@ lidar:
   observed_rate_hz: 10.0
   planner_front_half_angle_deg: null
   planner_map_topic: /scout_dwa/local_map
-  planner_angular_filter_source: user requested original full-angle DWA input
+  planner_angular_filter_source: original full-angle DWA input selected for the field trial
   guard_obstacle_topic: /scout_dwa/front_obstacles
   guard_front_half_angle_deg: 60.0
   computer_interface: enx00e04c892568
@@ -22,7 +22,7 @@ scout:
   received_status_ids: [0x211, 0x221, 0x241]
   model: null
   model_candidate: Scout 2.0
-  model_candidate_source: user tentative identification; not confirmed
+  model_candidate_source: tentative identification during field setup; not confirmed
   wheel_odom_topic: /scout/odom
   wheel_odom_observed_rate_hz: 50.0
   driver_running: true
@@ -51,6 +51,6 @@ geometry:
   legacy_velodyne_to_base_translation: [-0.35, 0.0, 0.0]
   legacy_tf_calibration_confirmed: false
   base_to_lidar: {x: 0.35, y: 0.0, z: 0.0, roll: 0.0, pitch: 0.0, yaw: 0.0}
-  base_to_lidar_source: user accepted existing setting
+  base_to_lidar_source: existing mounting configuration retained for the field trial
   footprint: [[0.4625, 0.3498], [0.4625, -0.3498], [-0.4625, -0.3498], [-0.4625, 0.3498]]
-  footprint_source: user confirmation
+  footprint_source: confirmed during field setup
