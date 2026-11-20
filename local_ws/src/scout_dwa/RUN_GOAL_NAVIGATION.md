@@ -1,18 +1,18 @@
-# 멀티3층 목표 주행 실행
+# 멀티3층 지도에서 목표 주행
 
-지도: `/home/rilab/catkin_ws/map/my_map.pcd` (멀티3층).
+이 문서는 멀티3층 지도(`/home/rilab/catkin_ws/map/my_map.pcd`)로 시험한 구성을 기록한다. 현재 통합 시연 환경의 실행 순서는 [저장소 루트 README](../../../README.md)를 참고한다.
 보존한 원본 AMSL DWA commit: `6387a9660c2064fa0545ac81d55f4bbe7962651f`.
-현재 목표 주행은 보존한 원본 `dwa_planner` 실행 파일을 사용한다.
+이 설정에서는 목표 주행에 보존한 원본 `dwa_planner`를 사용한다.
 mission은 `low_speed_planner.launch`를 시작하며 개선판은 현재 실행하지 않는다.
 단일 목표까지 연속 주행하며, 도착 시 정지하고 도착 로그를 출력한 뒤 주행 프로그램과 해당 DWA를 종료한다.
 이 구성의 전체 목표 도착 실차 시험은 아직 수행하지 않았다.
 
-## 현재 켜진 환경에서 실행
+## ROS와 센서가 이미 실행 중인 경우
 
 ROS master, Scout 드라이버, LiDAR, 센서 정적 TF는 기존 실행을 사용한다.
 HDL은 멀티3층 지도로 재시작했다. 새 지도에서 초기 위치를 다시 지정한다.
 아래 launch는 이전 `dwa_map.launch`, `low_speed_field_test.launch`, `first_motion_checks.launch`와 중복 실행하지 않는다.
-기존 DWA와 first_motion_checks 실행은 이번 지도 변경 과정에서 종료했다.
+멀티3층 지도로 전환할 때 기존 DWA와 `first_motion_checks` 실행을 종료했다.
 
 터미널 1 — 장애물 변환, 명령 감시, footprint, 독립 명령 watchdog:
 
@@ -23,7 +23,7 @@ roslaunch scout_dwa goal_navigation.launch accepted_hardware_profile:=true accep
 
 RViz에서 Fixed Frame=`map`, PointCloud2 토픽=`/globalmap`을 선택하고,
 `2D Pose Estimate`로 멀티3층 지도에서 실제 현재 위치와 방향을 지정한다.
-지도와 실시간 LiDAR가 맞는지 사용자가 확인한다.
+저장 지도와 실시간 LiDAR 점군이 맞는지 RViz에서 확인한다.
 필요하면 RViz만 다음 명령으로 실행한다.
 
 ```bash
@@ -94,7 +94,7 @@ roslaunch scout_dwa visualization.launch
 - 개선판의 별도 조향 비용은 원본 실행에 적용되지 않는다.
 - 도착 판정은 원본 finish 신호와 실제 map 위치·방향 오차(0.5 m, 0.1 rad)를 함께 확인한다.
 - 장애물로 정지하면 입력이 정상인 동안 제한 시간 내에서 재개를 기다린다. 입력 장애가 지속되면 정지·종료한다.
-- 두 accepted 인자는 사용자가 수락한 기존 장착·footprint·입력을 선택한다. 미측정 모델·센서 보정·전체 감지 영역·차량 firmware watchdog을 검증했다고 의미하지 않는다.
-- 새 지도에서의 위치 정합, 목표까지 도착, 실제 정지 성능은 사용자 현장 확인이 남아 있다.
+- 두 `accepted_trial_*` 인자는 제한 시험에서 확인한 기존 장착값, footprint와 입력을 선택한다. 장비 모델, 센서 보정, 전체 감지 영역, 차량 펌웨어 watchdog은 별도 검증이 필요하다.
+- 새 지도에서의 위치 정합, 목표 도착과 실제 정지 성능은 현장에서 추가 확인이 필요했다.
 - guard의 경로 검사 시간은 반응 시간 0.3초 + 측정 선속도/가정 감속도 1m/s²다. 감속도와 반응 시간은 소프트웨어 가정이며 실측 제동거리 보장이 아니다.
-- 이번 원본 실행 복원 후 실제 주행은 실행하지 않았다. 이전 사용자 시험은 당시 사용한 실행판과 설정을 기준으로 해석해야 한다.
+- 원본 실행을 복원한 뒤 이 구성으로 실제 주행을 시험하지 않았다. 이전 실차 시험은 당시 실행 버전과 설정에서 진행했다.

@@ -1,6 +1,6 @@
 # scout_dwa: AMSL DWA environment integration
 
-2026-10-03 업데이트: 사용자 요청으로 `run_goal_navigation.py`가 보존한 원본
+2026-10-03 설정에서는 `run_goal_navigation.py`가 원본
 `dwa_planner`를 `low_speed_planner.launch`로 실행하도록 복원했다.
 `src/improved_dwa`는 비교용으로 남아 있으며 현재 목표 주행에는 사용하지 않는다.
 외부 출력 guard의 차체 경로 검사는 유지한다. 원본 저장소는 수정하지 않았다.
@@ -14,9 +14,9 @@
 
 **현재 멀티3층 지도에서 목표까지 주행하는 실행 명령은
 [RUN_GOAL_NAVIGATION.md](RUN_GOAL_NAVIGATION.md)를 사용한다.**
-아래 과거 연결·시험 설명보다 이 실행 문서가 현재 운용 순서를 우선한다.
+아래에는 당시 연결 및 시험 구성을 기록했다. 현재 통합 프로젝트의 실행 순서는 [저장소 루트 README](../../../README.md)를 참고한다.
 
-현재 사용자 요청에 따른 기본 연결은 `scout_dwa.launch`다. 이 launch는 GitHub
+당시 기본 연결에는 `scout_dwa.launch`를 사용했다. 이 launch는 GitHub
 원본의 `dwa_planner/launch/local_planner.launch`를 직접 include하고,
 LiDAR 변환·footprint·토픽 remap·출력 guard만 연결한다. 기존 확장 세션 구성은
 `amsl_dwa_integration.launch`에 남아 있으며 기본 실물 연결에 요구하지 않는다.
@@ -58,7 +58,7 @@ roslaunch scout_dwa synthetic_pipeline.launch obstacle_mode:=map
 
 ### 기존 실행 명령에서 반영한 연결
 
-지도 이름과 경로 (사용자 지정):
+당시 사용한 지도 이름과 경로:
 
 - **멀티3층 맵 (현재 기본)**: `~/catkin_ws/map/my_map.pcd`
 - **하드실 맵**: `~/catkin_ws/src/hdl_localization/data/map/hard.pcd`
@@ -69,7 +69,7 @@ roslaunch scout_dwa synthetic_pipeline.launch obstacle_mode:=map
 현재 ROS master와 VLP16 수신 노드는 이미 실행 중이다. 중복 실행하지 않는다.
 CAN도 UP, 500000 bitrate와 차량 상태 프레임 수신이 확인됐다.
 
-Scout 2.0은 사용자 설명에 따른 후보이며 아직 확인되지 않았다. 모델을 확인한 뒤
+당시 Scout 2.0을 장비 모델 후보로 기록했으며, 실제 모델은 확인 전이었다. 모델을 확인한 뒤
 기존 `scout_robot_base.launch` 대신 명시적으로 모델·odom 토픽을 전달하는 구성을 사용한다.
 기존 bringup의 Mini 인자는 하위 launch에 전달되지 않아 실제 기본값은 false다.
 
