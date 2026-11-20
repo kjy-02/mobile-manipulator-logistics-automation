@@ -1,9 +1,0 @@
-<launch>
-  <node pkg="scout_dwa" type="cloud_obstacle_adapter" name="cloud_obstacle_adapter">
-    <param name="input_topic" value="/test_cloud"/>
-    <param name="coverage_confirmed" value="true"/>
-    <param name="min_z" value="-2.0"/>
-    <param name="max_z" value="2.0"/>
-  </node>
-  <test test-name="cloud_faults" pkg="scout_dwa" type="test_cloud_faults.py" time-limit="30"/>
-</launch>

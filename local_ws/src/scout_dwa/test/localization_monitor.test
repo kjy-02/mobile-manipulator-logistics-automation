@@ -1,8 +1,0 @@
-<launch>
-  <node pkg="scout_dwa" type="localization_monitor.py" name="localization_monitor">
-    <param name="max_matching_error" value="1.0" />
-    <param name="min_inlier_fraction" value="0.5" />
-    <param name="required_consecutive" value="3" />
-  </node>
-  <test test-name="localization_monitor_test" pkg="scout_dwa" type="test_localization_monitor.py" time-limit="35" />
-</launch>

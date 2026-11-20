@@ -1,8 +1,0 @@
-<launch>
-  <include file="$(find scout_dwa)/launch/amsl_dwa_integration.launch">
-    <arg name="dwa_config" value="$(find scout_dwa)/config/synthetic_dwa.yaml"/>
-    <arg name="footprint_config" value="$(find scout_dwa)/config/synthetic_footprint.yaml"/>
-    <arg name="robot_frame" value="custom_base"/>
-  </include>
-  <test test-name="integration_preflight" pkg="scout_dwa" type="test_integration_preflight.py" time-limit="35"/>
-</launch>

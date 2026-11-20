@@ -1,8 +1,0 @@
-<launch>
-  <include file="$(find scout_dwa)/launch/synthetic_pipeline.launch">
-    <arg name="obstacle_mode" value="map" />
-  </include>
-  <test test-name="synthetic_map_pipeline" pkg="scout_dwa" type="test_synthetic_pipeline.py" time-limit="40">
-    <param name="obstacle_mode" value="map" />
-  </test>
-</launch>

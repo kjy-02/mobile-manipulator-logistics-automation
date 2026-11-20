@@ -11,6 +11,10 @@ repositories:
     type: git
     url: https://github.com/SMRT-AIST/fast_gicp.git
     version: 0e7ec1441c99f7be453db2ea216d5de029387417
+  hdl_graph_slam:
+    type: git
+    url: https://github.com/koide3/hdl_graph_slam.git
+    version: 95b8dce41c10667dcf0e3e9801dc22754b3bd525
   hdl_global_localization:
     type: git
     url: https://github.com/koide3/hdl_global_localization

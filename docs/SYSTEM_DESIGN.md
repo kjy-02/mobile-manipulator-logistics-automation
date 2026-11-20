@@ -1,63 +1,30 @@
-# 모바일 매니퓰레이터 물류 자동화 시스템 — 기술 구성
+# 시스템 기술 상세
 
-졸업작품의 장비 구성과 실행 흐름을 설명한다. 학위논문 초안에서 설명한 설계를 실행 코드와 대조하고, 결과는 실제 시연에서 확인한 동작을 기준으로 정리했다.
+SCOUT 2.0이 픽업존까지 이동한 후 멈추면 xArm5가 RGB-D 카메라로 검출한 상자를 차량 측면 트레이에 적재합니다. [실내 통합 시연](https://youtu.be/7SqIaekgKKs)에서 빨강·노랑·파랑 상자의 순차 적재를 확인했습니다.
 
-## 물류 작업의 목적
+## 지도 작성과 위치 추정
 
-차량이 픽업존으로 이동한 뒤 정지하고, 작업대 상자를 인식해 파지·분류 적재하는 작업 흐름을 구성한다. 이동 로봇으로 고정 로봇팔의 작업 위치를 옮기고, RGB-D 인식으로 물품마다 별도의 시각 마커를 부착하지 않는 방식을 사용한다.
+[지도 작성 런치](../launch/mapping.launch)는 VLP-16의 점군을 전처리하고 FAST_GICP로 스캔 간 움직임을 추정합니다. HDL Graph SLAM이 키프레임과 루프 제약을 자세 그래프에 반영하고 결과 지도를 PCD로 저장합니다. 시연은 [실내 지도](../maps/m304.pcd)를 사용합니다.
 
-통합 시험 과제는 서로 다른 색의 상자 세 개를 차례로 집어 차량의 적재함에 싣는 것이다. 동작은 아래 실내 통합 시연에서 확인할 수 있다. 학위논문의 실험 표에는 반복 시험 횟수, 성공률, 위치 오차와 전체 작업 시간이 아직 기입돼 있지 않다.
+[위치 추정 런치](../local_ws/src/scout_dwa/launch/hdl_localization_map.launch)는 HDL Localization의 NDT_OMP로 실시간 점군을 저장 지도에 정합합니다. RViz에서 초기 위치와 픽업존 목표를 지정합니다. DWA는 차량의 측정 속도를 `/scout/odom`에서 받고, 위치 추정에 사용되는 odometry는 `/localization/odom`으로 분리합니다.
 
-## 장비의 역할
+## DWA 접근과 단계 전환
 
-| 장비 | 역할 |
-|---|---|
-| SCOUT 2.0 | 물품 작업 위치까지 이동하는 차동 구동 플랫폼 |
-| Velodyne VLP-16 | 지도 작성, 위치 추정, 주행 장애물 입력을 위한 3D 점군 |
-| xArm5 + 2-finger gripper | 상자 접근, 파지, 이송 및 분류 적재 |
-| Intel RealSense L515 | 물체의 RGB 영상과 깊이 정보 취득 |
+[점군 어댑터](../local_ws/src/scout_dwa/src/cloud_obstacle_adapter.cpp)가 실시간 LiDAR 점군을 장애물 격자로 변환합니다. [DWA](../local_ws/src/dwa_planner/src/dwa_planner.cpp)는 현재 속도에서 도달할 수 있는 속도 후보로 궤적을 예측하고, 충돌 검사와 목표·장애물·속도 비용으로 명령을 고릅니다. 정지 상태에서 가속도 제한으로 최대 후보가 설정된 최소 속도보다 낮아지면 최소 후보를 최대 후보와 같은 값으로 제한합니다. 시연은 목표점에 국소적으로 접근하는 방식입니다.
 
-## 1. 지도 작성과 저장 지도 기반 위치 추정
+[실내 설정](../local_ws/src/scout_dwa/config/dwa_scout_low_speed_test.yaml)의 목표 속도는 0.55 m/s, 최소 속도는 0.1 m/s, 예측 시간은 3 s, 도착 허용 거리는 0.3 m입니다. 목표점 중심 0.75 m 안의 점을 DWA 장애물 후보에서 제외하도록 설정했습니다. 이 수치는 소프트웨어 설정값입니다.
 
-지도 작성은 사전 단계로 수행한다. `hdl_graph_slam`에서 VLP-16 점군을 전처리하고 FAST_GICP로 스캔 사이 상대 이동을 추정한다. 키프레임과 루프 제약을 자세 그래프에 반영하고 결과 지도를 PCD로 저장한다. 기본 launch의 voxel downsampling 설정은 0.1 m이다.
+| 실행 단계 | 역할 |
+| --- | --- |
+| [`start_all.sh`](../start_all.sh) | 패키지를 빌드하고 [통합 런치](../launch/system.launch)로 차량·센서·팔을 준비 |
+| [`run_goal_navigation.py`](../local_ws/src/scout_dwa/scripts/run_goal_navigation.py) | 목표를 받고 [DWA 런치](../local_ws/src/scout_dwa/launch/low_speed_planner.launch)를 구동. `finish_flag`를 받으면 정지 명령을 보내고 DWA 종료 |
+| [`command_watchdog.py`](../local_ws/src/scout_dwa/scripts/command_watchdog.py) | 주행 프로그램의 차량 명령을 `/cmd_vel`로 전달. 입력이 끊기면 정지 명령 발행 |
+| [`run_dwa_then_xarm.py`](../run_dwa_then_xarm.py) | 주행 프로그램이 성공으로 종료된 뒤 [YOLO·xArm 런치](../local_ws/src/use_yolo/launch/vision_pick_drop.launch)를 실행 |
 
-최종 주행 중에는 새로운 지도를 계속 작성하는 대신 `hdl_localization`으로 실시간 점군과 저장 지도를 정합한다. 현재 구성은 NDT_OMP를 사용하며, RViz에서 초기 위치·방향과 작업대 목표를 지정한다. TF로 목표와 로봇 자세를 같은 기준에서 비교한다.
+## RGB-D 인식과 파지
 
-지도 작성 launch는 `third_party/hdl/hdl_graph_slam/launch`, 위치 추정 launch는 `local_ws/src/scout_dwa/launch/hdl_localization_map.launch`에 있다.
+팔이 초기 관측 자세에 도착하면 `/vision_enable`을 켭니다. [검출 노드](../local_ws/src/use_yolo/scripts/yolo_detector.py)는 L515의 RGB 영상에서 OpenCV DNN으로 YOLOv8n ONNX를 실행합니다. 검출 클래스는 `red_box`, `yellow_box`, `blue_box`이며, 박스 안의 깊이 영상에서 상자 상대 위치를 계산합니다. 팔이 움직이는 동안 새 목표 TF 발행을 멈춥니다.
 
-## 2. DWA 작업대 접근 주행
+[파지 노드](../local_ws/src/use_yolo/scripts/xarm_vision_pick_drop.py)는 초기 관측 자세에서 카메라 상대 좌표, 팔의 현재 위치와 장착 오프셋·스케일을 조합합니다. 관측 자세를 바꾸면 좌표 대응을 다시 확인해야 합니다. 수직 파지 IK는 목표의 수평 위치로 J1을 결정하고, J5 연동값을 정한 뒤 수치 자코비안과 감쇠 최소제곱으로 J2~J4를 계산합니다. 팔은 접근, 하강, 파지, 상승, 적재, 관측 자세 복귀 순으로 동작합니다.
 
-실시간 LiDAR 점군에서 장애물 격자를 만들고, 로봇 현재 속도·목표·차체 형상을 DWA에 전달한다. DWA는 속도 후보별 궤적을 예측하고 충돌 후보를 제외한 뒤 목표·장애물·속도 비용으로 주행 명령을 선택한다. 현재 구성은 목표에 대한 국소 접근이며 별도의 전역 우회 경로를 생성하지 않는다.
-
-연결 프로그램은 도착 신호를 받으면 차량을 정지시키고 주행 프로그램을 종료한다. 주행 프로그램이 정상 종료된 뒤 YOLO/xArm launch를 시작하므로 팔은 정차한 상태에서 작업한다.
-
-주행 설정 예시는 목표 속도 0.55 m/s, 최소 속도 0.1 m/s, 예측 시간 3 s, 도착 허용 거리 0.3 m다. 소프트웨어 설정값이며 실제 속도와 위치 오차는 별도로 측정해야 한다. 정지 상태에서 가속도 제한으로 최대 후보가 설정한 최소 속도보다 낮아지면, 최소 후보를 최대 후보와 같은 값으로 제한한다.
-
-속도 후보 계산은 `local_ws/src/dwa_planner/src/dwa_planner.cpp`, 주행 단계 연결은 `local_ws/src/scout_dwa/scripts/run_goal_navigation.py`에 있다.
-
-## 3. RGB-D 검출과 Eye-in-Hand 관측
-
-L515는 팔 말단에 장착된 Eye-in-Hand 구성이다. 팔이 초기 관측 자세에 도달하면 `/vision_enable`을 켜고, YOLOv8n ONNX 모델을 OpenCV DNN으로 실행해 상자의 클래스와 박스를 얻는다. 박스 안 깊이 영역으로 3차원 상대 위치를 계산하고 목표 정보를 전달한다.
-
-팔이 이동하는 동안 목표 TF 발행을 일시 정지해 초기 관측 자세에서 선택한 물체를 처리한다. 모델이 구분하는 클래스는 `red_box`, `yellow_box`, `blue_box`다. 이 문서는 모델의 입력과 출력, 시스템 연동을 설명한다. 학습 데이터와 학습 결과는 아직 포함돼 있지 않다.
-
-검출과 상대 위치 계산 코드는 `local_ws/src/use_yolo/scripts/yolo_detector.py`에 있다.
-
-## 4. 좌표 보정과 xArm 파지·적재
-
-고정된 초기 관측 자세에서 카메라의 상대 좌표에 팔의 현재 위치와 장착 오프셋·스케일 보정값을 적용해 파지 위치를 계산한다. 보정값은 이 자세를 기준으로 잡았으므로 관측 자세가 달라지면 좌표 대응을 다시 확인해야 한다.
-
-코드의 수직 파지 IK는 목표 수평 위치로 J1을 결정하고 J5 연동값을 정한 뒤, J2·J3·J4를 수치 자코비안과 감쇠 최소제곱 방식으로 반복 계산한다. 파지 전 상공 접근, 하강, 그리퍼 닫기, 상승, 분류 적재, 초기 자세 복귀 순서로 연결한다. 초기 자세에서 설정 시간 동안 검출이 없으면 종료 절차를 수행한다.
-
-로봇팔 조작부는 팀원이 맡았다. 김재윤은 지도 작성, 위치 추정 설정, DWA 수정과 전체 통합 시험을 담당했다.
-
-파지와 적재 동작은 `local_ws/src/use_yolo/scripts/xarm_vision_pick_drop.py`에 있다.
-
-## 실내 통합 시연과 검증 범위
-
-- 실내 시연에서 픽업존 접근·정지와 3색 상자의 순차 적재를 확인했다. [실내 통합 시연](https://youtu.be/7SqIaekgKKs)
-- L515에서 사용하지 않는 포인트 클라우드 출력을 끈 뒤 RGB 수신이 재개됐다. 충전기를 분리한 상태에서는 간헐적인 프레임 저하가 관찰됐다. 절전 전환과 관련됐을 가능성이 있으나 전원 모드별 비교 측정은 하지 않았다.
-- 학위논문 초안에 적힌 상자 명칭과 실제 모델의 클래스명이 달라, 여기에는 현재 소스의 클래스명을 사용했다.
-- 논문 초안의 국문·영문 요약과 본문에는 계획과 구현 설명이 함께 들어 있다. 실제로 구현하고 시연한 동작은 위에 정리했으며, 성공률·위치 오차·작업 시간의 정량 결과는 아직 없다.
-
-자세한 문제 해결 과정은 [통합 문제와 대응](INTEGRATION_DEBUGGING.md)을 참고한다.
+주행에서 파지로 전환되지 않았던 문제와 RGB 입력 끊김의 확인 과정은 [통합 시험 문제 해결](INTEGRATION_DEBUGGING.md)에 정리했습니다. 반복 횟수, 성공률, 위치 오차, 처리 시간의 별도 정량 자료는 없습니다.
