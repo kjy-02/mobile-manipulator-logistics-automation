@@ -9,7 +9,7 @@ SCOUT 2.0이 실내 픽업존에 도착하면 xArm5가 상자를 인식하고, �
 | 성과 | 제35회 순천향대학교 공과대학 학술제 은상 |
 | 장비 | SCOUT 2.0, xArm5, Velodyne VLP-16, RealSense L515 |
 | 환경 | ROS 1 Noetic, C++17, Python 3 |
-| 김재윤 담당 | 3D LiDAR 지도 작성, HDL Localization 설정, DWA 수정, 실차 통합 시험 |
+| 김재윤 담당 | 3D LiDAR 지도 작성, HDL Localization 설정, DWA기반 실차 적용, 실차 통합 시험 |
 | 팀원 담당 | xArm5 조작부 |
 
 ## 시연 결과
